@@ -251,6 +251,7 @@ class UserController extends BaseController {
     $modelView->assign("title", getMessage('editUser'));
     $modelView->assign("action", buildLink("user", "save_profile"));
     $modelView->assign("editprofile", 1);
+    $modelView->assign("newuser", false);
 	$modelView->assign("profile_favorite", $user->favorite);
 	$modelView->assign("profile_website", $user->website);
     $this->prepareUser($user, $modelView);
