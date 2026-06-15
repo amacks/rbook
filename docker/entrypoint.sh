@@ -39,7 +39,7 @@ MAXINVITATIONS="${MAXINVITATIONS:-0}"
 ALLOW_REGISTRATION="${ALLOW_REGISTRATION:-false}"
 DEBUG="${DEBUG:-false}"
 
-CONFIG=/var/www/html/config.php
+CONFIG=/var/www/html/rbook/config.php
 
 cat > "$CONFIG" <<PHP
 <?php
@@ -74,10 +74,10 @@ echo "?>" >> "$CONFIG"
 echo "rbook: config.php generated from environment variables"
 
 # Ensure the Smarty compile cache directory exists and is writable
-TEMPLATES_C="/var/www/html/skins/${SKIN}/templates_c"
+TEMPLATES_C="/var/www/html/rbook/skins/${SKIN}/templates_c"
 mkdir -p "$TEMPLATES_C"
 chown www-data:www-data "$TEMPLATES_C"
 chmod 755 "$TEMPLATES_C"
 
-echo "rbook: config.php written, templates_c ready — starting Apache"
+echo "rbook: config.php written to ${CONFIG}, templates_c ready — starting Apache"
 exec apache2-foreground
