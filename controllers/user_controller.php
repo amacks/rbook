@@ -71,7 +71,7 @@ class UserController extends BaseController {
 
     $modelView->assign("title", getMessage("Login"));
     $modelView->assign("pageClass", "loginPage");
-    $modelView->assign("userName", $_POST['user']);
+    $modelView->assign("userName", $_POST['user'] ?? '');
     $modelView->assign("action", buildLink("user", "login"));
     if(isset($redirectTo)) {
       $modelView->assign("redirectTo", $redirectTo);
