@@ -393,7 +393,7 @@ class RecipeController extends BaseController {
   function results($page) {
     $modelView = $this->prepareModelAndView();
     $rset = $_SESSION['results'];
-    $_SESSION['lastsearch'] = $REQUEST_URI;
+    $_SESSION['lastsearch'] = $_SERVER['REQUEST_URI'];
     $rset->page = intval($page);
     $rset->constructPayload($page, null, $modelView);
 	$modelView->assign("title", $rset->name);
