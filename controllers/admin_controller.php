@@ -42,7 +42,6 @@ class AdminController extends BaseController {
   }
 
   function index() {
-	$this->before_execute("index");
 	$page_title = getMessage("Admin");
 	$smarty =& prepareSmarty();
 	$smarty->assign("selectedTab", "admin");

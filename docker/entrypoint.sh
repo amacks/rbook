@@ -71,6 +71,7 @@ if [ -n "${GOOGLE_ANALYTICS:-}" ]; then
 fi
 
 echo "?>" >> "$CONFIG"
+echo "rbook: config.php generated from environment variables"
 
 # Ensure the Smarty compile cache directory exists and is writable
 TEMPLATES_C="/var/www/html/skins/${SKIN}/templates_c"

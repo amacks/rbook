@@ -35,7 +35,7 @@ class GuestbookController extends BaseController {
    * Factory method that creates a guestbook controller.  
    * @static
    */
-  function newInstance() {
+  static function newInstance() {
 	$controller = new GuestbookController();
   	$valid = array("index", "create_comment", "delete_comment");
     $auth = array("delete_comment");
@@ -65,7 +65,7 @@ class GuestbookController extends BaseController {
 	$_SESSION['no1'] = rand(1,10);
 	$_SESSION['no2'] = rand(1,10);
 	
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("selectedTab", "guestbook");
     $modelView->assign("title", getMessage("guestbook"));
 	$modelView->assign("hasComments", count($comments));

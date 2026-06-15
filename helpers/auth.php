@@ -81,7 +81,7 @@ function isLoggedIn() {
  */
 
 function isAdminUser() {
-  $user = $_SESSION['user'];
+  $user = $_SESSION['user'] ?? null;
   return isLoggedIn() && $_SESSION['user']->admin;
 
 }
@@ -91,7 +91,7 @@ function isAdminUser() {
  */
 
 function isReadonlyUser() {
-  $user = $_SESSION['user'];
+  $user = $_SESSION['user'] ?? null;
   return isLoggedIn() && $_SESSION['user']->readonly;
 }
 

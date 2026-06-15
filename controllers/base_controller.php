@@ -93,7 +93,7 @@ class BaseController {
   }
 
   function getPageErrors() {
-	return $_SESSION['pageErrors'];
+	return $_SESSION['pageErrors'] ?? null;
   }
 
 
@@ -259,6 +259,9 @@ class BaseController {
 	$smarty->addPluginsDir(ROOT_DIRECTORY . '/plugins');
 	$smarty->assign("controller", $this->name);
 	$smarty->assign("action", $this->currentAction);
+	$smarty->assign("pageClass", "");
+	$smarty->assign("pageError", null);
+	$smarty->assign("userName", "");
 	$smarty->assign("showrss", "false");
 	$smarty->assign("stylesheet", 'style/style.css');
 	$smarty->assign("stylesheetPrint", "style/style-print.css");
@@ -280,7 +283,7 @@ class BaseController {
 	} 
 	$smarty->assign("recipecount", $recipecount);
 	
-	$user = $_SESSION['user'];
+	$user = $_SESSION['user'] ?? null;
 	$this->prepareUser($user, $smarty);
 	$loggedIn = false;
 	if(!isset($user) && isset($_COOKIE['saveid']) && strlen($_COOKIE['saveid'])) {
@@ -392,6 +395,9 @@ class BaseController {
   }
 
   function prepareUser(&$user, &$smarty) {
+    if (!$user) {
+      return;
+    }
 	$smarty->assign("user_username", $user->username);
 	$smarty->assign("user_name", $user->name);
 	$smarty->assign("user_email", $user->email);

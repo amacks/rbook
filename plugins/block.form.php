@@ -42,7 +42,7 @@
 function smarty_block_form($params, $content, $template, &$repeat) {
   static $formOpen = '';
   if(is_null($content)) {
-	$link = "<form  action=\"". buildLink($params['controller'], $params['action'], $params['arg']) . "\"";
+	$link = "<form  action=\"". buildLink($params['controller'], $params['action'], $params['arg'] ?? null) . "\"";
 	$method = empty($params['method']) ? 'post' : $params['method'];
 	$link = $link . " method=\"" . $method . "\"";
 	$enctype = empty($params['enctype']) ? '' : (" enctype=\"" . $params['enctype'] . "\"");

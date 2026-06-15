@@ -32,8 +32,9 @@
  */
 
 function smarty_block_link($params, $content, $template, &$repeat) {
+  static $mylink = '';
   if(is_null($content)) {
-	$link = "<a href=\"". buildLink($params['controller'], $params['action'], $params['arg']) . "\"";
+	$link = "<a href=\"". buildLink($params['controller'], $params['action'], $params['arg'] ?? null) . "\"";
 	if(!empty($params['class_name'])) {
 	  $link = $link . " class=\"" . $params['class_name'] . "\"";
 	}
@@ -43,9 +44,9 @@ function smarty_block_link($params, $content, $template, &$repeat) {
 	if(!empty($params['id'])) {
 	  $link = $link . " id=\"" . $params['id'] . "\"";
 	}
-	$smarty->mylink = $link . ">";
+	$mylink = $link . ">";
   } else {
-	return $smarty->mylink . $content . "</a>";
+	return $mylink . $content . "</a>";
   }
 }
 ?>

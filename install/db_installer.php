@@ -68,6 +68,7 @@ class DBInstaller {
   public $language;
   public $convertProgram;
   public $skin;
+  public $stylesheet;
   public $title;
 
   function __construct() {
@@ -138,9 +139,9 @@ class DBInstaller {
     $this->skin = $postValues['skin'];
     $this->title = $postValues['title'];
     $this->viewPolicy = $postValues['viewPolicy'];
-    $this->maxInvitations = $postValues['maxInvitations'];
-    $this->exportDirectory = $postValues['exportDirectory'];
-    $this->convertProgram = $postValues['imageMagick'];
+    $this->maxInvitations = $postValues['maxInvitations'] ?? 0;
+    $this->exportDirectory = $postValues['exportDirectory'] ?? '';
+    $this->convertProgram = $postValues['imageMagick'] ?? '';
     $this->buildDatabase = $postValues['action'] == "on";
 	$this->language = $postValues['language'];
   }
@@ -219,12 +220,14 @@ class DBInstaller {
       return;
     }
     $user = $this->dbUserName;
-    $host = $this->databaseHost;
     $pass = $this->password;
-    // MySQL 8: CREATE USER IF NOT EXISTS, then GRANT, then ALTER USER for password
-    $this->runQuery($db, "CREATE USER IF NOT EXISTS '{$user}'@'{$host}' IDENTIFIED BY '{$pass}'");
-    $this->runQuery($db, "GRANT UPDATE,INSERT,DELETE,SELECT ON `{$this->databaseName}`.* TO '{$user}'@'{$host}'");
-    $this->runQuery($db, "ALTER USER '{$user}'@'{$host}' IDENTIFIED BY '{$pass}'");
+    $dbName = $this->databaseName;
+    // Create user with wildcard host for Docker/remote compatibility, and with the specific DB host.
+    // Use IF NOT EXISTS so existing users (e.g., created by docker-compose) keep their password.
+    foreach (['%', $this->databaseHost] as $host) {
+      $this->runQuery($db, "CREATE USER IF NOT EXISTS '{$user}'@'{$host}' IDENTIFIED BY '{$pass}'");
+      $this->runQuery($db, "GRANT UPDATE,INSERT,DELETE,SELECT ON `{$dbName}`.* TO '{$user}'@'{$host}'");
+    }
     $this->runQuery($db, "FLUSH PRIVILEGES");
   }
 

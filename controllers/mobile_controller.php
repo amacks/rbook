@@ -35,7 +35,7 @@ class MobileController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function newInstance() {
+  static function newInstance() {
 	$controller = new MobileController();
 	$controller->set_valid_actions(array("index"));
 	return $controller;

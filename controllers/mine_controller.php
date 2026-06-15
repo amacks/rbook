@@ -37,7 +37,7 @@ class MineController extends BaseController {
    * Factory method that creates a myrecipes controller.  
    */
 
-  function newInstance() {
+  static function newInstance() {
 	$controller = new MineController("mine");
 	$controller->set_valid_actions(array("index", "take", "delete", "results"));
 	$controller->set_requires_authentication(array("index", "take", "delete", "results"));
@@ -74,7 +74,7 @@ class MineController extends BaseController {
 	$button = new stdClass();
 	$button->url = buildLink("mine", "delete", "%d");
 	$button->name = getMessage('remove');
-	$modelView =& $this->prepareModelAndView();
+	$modelView = $this->prepareModelAndView();
 	$rset->constructPayload(intval($page), array($button), $modelView);  
 	$javascripts = null;
 	$modelView->assign("selectedTab", "mine");

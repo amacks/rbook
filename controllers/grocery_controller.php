@@ -36,7 +36,7 @@ class GroceryController extends BaseController {
    * Factory method that creates an image controller.  
    */
 
-  function newInstance() {
+  static function newInstance() {
 	$controller = new GroceryController("grocery");
 	$controller->set_valid_actions(array("clear", "save", "update", "remove", "index", "save_in_place"));
 	$controller->set_requires_authentication(array("clear", "save", "save_in_place", "update", "remove", "index"));
@@ -99,7 +99,7 @@ class GroceryController extends BaseController {
 	$user = getUser();
 	$groceryList = GroceryList::findByUser($user->id);
 	$page_title = getMessage("GroceryList");
-	$modelView =& $this->prepareModelAndView();
+	$modelView = $this->prepareModelAndView();
 	$modelView->assign("selectedTab", "grocery");
 	$modelView->assign("title", $page_title);
 	$modelView->assign("groceryList", $this->buildGroceryList($groceryList));

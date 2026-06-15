@@ -38,7 +38,7 @@ class RecipeController extends BaseController {
    * Factory method that creates a recipe controller.
    * @static  
    */
-  function newInstance() {
+  static function newInstance() {
     $controller = new RecipeController("recipe");
 	$valid = array("author", "create", "create_comment", "delete", "delete", 
 				  "save", "edit", "add_picture", "remove_picture", "remove_pictures",
@@ -75,7 +75,7 @@ class RecipeController extends BaseController {
       header("Location: " . APPROOT . "/install/");
       exit();
     }
-	$sortType = $_COOKIE['sortType'];
+	$sortType = $_COOKIE['sortType'] ?? null;
 	$results = null;
 	if(isset($sortType) && $sortType == 'popular') {
 	  $results = Recipe::searchForMostPopular(RESULTSONHOMEPAGE);
@@ -85,7 +85,7 @@ class RecipeController extends BaseController {
 	}
     unset($_SESSION['lastsearch']);
     unset($_SESSION['recipe']);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", APPTITLE);
     $rset = new ResultSet(RESULTSONHOMEPAGE, $results);
     $rset->name = getMessage("mostRecentAdditions");
@@ -112,7 +112,7 @@ class RecipeController extends BaseController {
     $comments = Comment::findByRecipe($recipe->id);
     $page_title = $recipe->title;
     $hiliteCategory = $recipe->categoryName;
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
 	$modelView->assign("hasComments", count($comments));
     $modelView->assign("title", $recipe->title);
     $modelView->assign("recipe", $this->buildDisplayableRecipe($recipe, true));
@@ -342,7 +342,7 @@ class RecipeController extends BaseController {
   
   function remove_pictures() {
     $recipe = $this->getRecipe(false);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", $recipe->title);
     $modelView->assign("hiliteCategory", $recipe->categoryName);
     $modelView->assign("recipe", $this->buildDisplayableRecipe($recipe, false));
@@ -351,7 +351,7 @@ class RecipeController extends BaseController {
 
   function add_picture() {
     $recipe = $this->getRecipe(false);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", $recipe->title);
     $modelView->assign("caption", $_POST['caption']);
     $modelView->assign("hiliteCategory", $recipe->categoryName);
@@ -391,7 +391,7 @@ class RecipeController extends BaseController {
    * session.
    */
   function results($page) {
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $rset = $_SESSION['results'];
     $_SESSION['lastsearch'] = $REQUEST_URI;
     $rset->page = intval($page);
@@ -501,7 +501,7 @@ class RecipeController extends BaseController {
       $catNames[] = $cat->name;
     }
     
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", $recipe->title);
     $modelView->assign("hiliteCategory", $recipe->categoryName);
     $modelView->assign("recipe", $this->buildDisplayableRecipe($recipe, false));

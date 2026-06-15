@@ -35,14 +35,14 @@ class ContentController extends BaseController {
    @static  
  */
 
-  function newInstance() {
+  static function newInstance() {
 	$controller = new ContentController();
 	$controller->set_valid_actions(array("topic"));
 	return $controller;
   }
 
   function topic($topic) {
-	$smarty =& $this->prepareModelAndView();
+	$smarty = $this->prepareModelAndView();
 	$smarty->assign("selectedTab", "admin");
 	$smarty->assign("title", $topic);
 	$smarty->display(getFullTemplateName("content_$topic"));

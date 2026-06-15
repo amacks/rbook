@@ -3,3 +3,6 @@ composer.phar
 skins/*/templates_c/
 .idea/
 config.php
+compose-mysql/
+install/error.log
+.phpunit.result.cache

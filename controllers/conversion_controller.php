@@ -36,7 +36,7 @@ class ConversionController extends BaseController {
    * @static
    */
 
-  function newInstance() {
+  static function newInstance() {
     $controller = new ConversionController();
     $controller->set_valid_actions(array("index"));
     return $controller;
@@ -48,7 +48,7 @@ class ConversionController extends BaseController {
 
   function index() {
     unset($_SESSION['lastsearch']);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("selectedTab", "conversion");
     $modelView->assign("title", getMessage("Conversions"));
     $modelView->display(getFullTemplateName("conversion"));

@@ -49,7 +49,7 @@ class ExporterController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function newInstance() {
+  static function newInstance() {
     $controller = new ExporterController("exporter");
     $controller->set_requires_adminaccess(array("index", "import", "show_exporter", "export", "download_export", "show_results"));
     return $controller;
@@ -89,9 +89,8 @@ class ExporterController extends BaseController {
    */
 
   function index() {
-    $this->before_execute("index");
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $importer = new Importer();
     $files = $importer->listImportFiles();
 
@@ -117,7 +116,6 @@ class ExporterController extends BaseController {
   }
 
   function export() {
-    $this->before_execute("export");
     if(!$this->isPost()) {
       $this->activateDefault();
     }
@@ -135,10 +133,9 @@ class ExporterController extends BaseController {
   }
 
   function show_results() {
-    $this->before_execute("show_results");
     $exporter = $_SESSION['exporter'];
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign('numRecipes', $exporter->numRecipes);
     $modelView->assign('numCategories', $exporter->numCategories);
     $modelView->assign('numUsers', $exporter->numUsers);
@@ -151,8 +148,7 @@ class ExporterController extends BaseController {
   }
 
   function show_exporter() {
-    $this->before_execute("show_exporter");
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign('title', getMessage('Export'));
     $modelView->assign('pageTitle', getMessage('Export'));
     $modelView->assign('file', $_POST['file']);
@@ -161,7 +157,6 @@ class ExporterController extends BaseController {
   }
 
   function download_export($fileName) {
-    $this->before_execute("download_export");
     if(empty($fileName)) {
       setPageError(getMessage("noImportFile"));
       gotoReferrer();
@@ -184,7 +179,6 @@ class ExporterController extends BaseController {
   }
 
   function delete_import($id) {
-    $this->before_execute("delete_import");
 	$path = IMPORTDIR . "/" . $id . ".xml";
 	if(!empty($id)) {
 	  if(is_file($path)) {
@@ -201,7 +195,6 @@ class ExporterController extends BaseController {
    */
 
   function import() {
-    $this->before_execute("import");
     if(!$this->isPost()) {
       $this->activateDefault();
     }
