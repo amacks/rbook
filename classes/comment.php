@@ -66,17 +66,16 @@ class Comment extends BaseRecord {
   }
 
   function dbCreateNew() {
-    $db =& $this->getDb();
-    $id = $db->nextId("comments");
-    $this->runQuery($db, "insert into comments (id, recipeid, userid, rating, postdate, modifieddate, createdate, comment) values (?, ?, ?, ?,  ?, now(), now(), ?)", array($id, $this->recipeid, $this->userid, $this->rating, $this->postDate, $this->comment));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into comments (recipeid, userid, rating, postdate, modifieddate, createdate, comment) values (?, ?, ?, ?,  ?, now(), now(), ?)", array($this->recipeid, $this->userid, $this->rating, $this->postDate, $this->comment));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
-    $this->id = $id;
   }
   function remove($db = null) {
     $cascade = isset($db);
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $this->runQuery($db, "delete from comments where id = ?", array($this->id));
     if(!$cascade) {

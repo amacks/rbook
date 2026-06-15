@@ -52,17 +52,17 @@ class GroceryList extends BaseRecord {
    */
 
   function dbCreateNew($db = null) {
-    $db =& $this->getDb();
-    $this->id = $db->nextId('users');
-    $this->runQuery($db, "insert into groceryitems (id,userid,description,orderid) " .
-                    " values (?, ?, ?, ?)",
-                    array($this->id, $this->userid, $this->description, $this->orderid));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into groceryitems (userid,description,orderid) " .
+                    " values (?, ?, ?)",
+                    array($this->userid, $this->description, $this->orderid));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
   }
 
   function dbUpdate($db = null) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "update groceryitems set " .
                     "userid = ?, description=?, orderid= ? where id = ?",
                     array($this->userid, $this->description, $this->orderid, $this->id));

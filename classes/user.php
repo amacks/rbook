@@ -104,18 +104,18 @@ class User extends BaseRecord {
    */
 
   function dbCreateNew($db = null) {
-    $db =& $this->getDb();
-    $this->id = $db->nextId('users');
-    $this->runQuery($db, "insert into users (id, email,name,password,admin,disabled, " .
-                    "readonly, invited, username, createdate) values (?, ?, ?, ?, ?, ?, ?, ?, ?, now())",
-                    array($this->id, $this->email, $this->name,$this->password, 
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into users (email,name,password,admin,disabled, " .
+                    "readonly, invited, username, createdate) values (?, ?, ?, ?, ?, ?, ?, ?, now())",
+                    array($this->email, $this->name, $this->password, 
                           $this->admin, $this->disabled, $this->readonly, $this->invited, $this->username));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
   }
 
   function dbUpdate($db = null) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "update users set email = ?,name = ?, admin = ?, " .
                     "readonly = ?, auth=?, disabled = ?, invited = ?, favorite = ?, website = ? where id = ?",
                     array($this->email, $this->name, $this->admin,  
@@ -209,12 +209,7 @@ class User extends BaseRecord {
    * Updates a password for a user.
    */
   function updatePassword($password) {
-    if(!isset($this)) {
-      die("Call to updatePassword without this pointer");
-    }
-    
-    $db =& $this->getDb();
-    $pw = $password;
+    $db = $this->getDb();
     $password = md5($password);
 
     $this->runQuery($db, "update users set password = ? where id = ?",
@@ -225,7 +220,7 @@ class User extends BaseRecord {
   }
 
   function invitationsUsed() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
 		/* Invitations are used both to invite others and to recover
 		 * passwords.  Here we check that the invitee does not equal the
@@ -233,7 +228,7 @@ class User extends BaseRecord {
 		 * results. 
 		 */
 
-    $result =& $this->runQuery($db, "select count(*) from invitations where inviter = ? and invitee <> ?", 
+    $result = $this->runQuery($db, "select count(*) from invitations where inviter = ? and invitee <> ?", 
 															 array($this->id, $this->id));
     if($result->fetchInto($row, DB_FETCHMODE_ORDERED)) {
       $amount = $row[0];
@@ -245,7 +240,7 @@ class User extends BaseRecord {
   }
 
   function removeFromMyRecipes($recipe) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
   
     $this->runQuery($db, "delete from mine where recipeid = ? and userid = ?", 
                     array($recipe, $this->id));
@@ -260,14 +255,14 @@ class User extends BaseRecord {
    * that are currently in the users 'mine' list.
    */
   function &searchForMine() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
     $query = "SELECT recipes.id as id, recipes.createdate as date,recipes.name as name, " . 
 			 "recipes.cached_rating as ra, recipes.cached_ratinghits as rahi, users.username " .
 			 "as submittedbyusername, users.name as submittedbyname " .
 			 "FROM recipes, mine, users " .
 			 "WHERE mine.userid = ? and mine.recipeid = recipes.id AND submittedby = users.id ORDER BY recipes.name";
-    $result =& $this->runQuery($db, $query, array($this->id));
+    $result = $this->runQuery($db, $query, array($this->id));
     
     $mine = array();
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -282,10 +277,10 @@ class User extends BaseRecord {
   }
   
   function countRecipes() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
     $query = "select count(id) from recipes where submittedby = ?";
-    $result =& $this->runQuery($db, $query, array($this->id));
+    $result = $this->runQuery($db, $query, array($this->id));
     if($result->fetchInto($row, DB_FETCHMODE_ORDERED)) {
       $amount = $row[0];
     } else {
@@ -298,7 +293,7 @@ class User extends BaseRecord {
   }
   
   function addToMyRecipes($recipe) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "insert into mine (recipeid, userid) values(?, ?) " . 
                     "on duplicate key update userid = ?", 
                     array($recipe, $this->id, $this->id));

@@ -84,13 +84,13 @@ class Image extends BaseRecord {
 
   function &findForRecipe($recipeid, $limit = null, $db = null) {
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $query = "select uid,images.id,recipeuid,recipeid,caption,width,height,submittedBy,images.createDate,type,users.name from images,users where recipeid = ? and users.id = images.submittedBy";
     if(isset($limit)) {
-      $result =& $db->limitQuery($query, 0, 5, array($recipeid));
+      $result = $db->limitQuery($query, 0, 5, array($recipeid));
     } else {
-      $result =& BaseRecord::runQuery($db, $query , array($recipeid));
+      $result = BaseRecord::runQuery($db, $query, array($recipeid));
     }
     $rows = array();
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -165,12 +165,11 @@ class Image extends BaseRecord {
   }
 
   function dbCreateNew() {
-    $db =& $this->getDb();
-    $id = $db->nextId("images");
-    $this->runQuery($db, "insert into images (id, uid, recipeuid,recipeid, caption, width, height, submittedBy, type) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", array($id, $this->uid, $this->recipeuid, $this->recipeid, $this->caption, $this->width, $this->height, $this->submittedBy, $this->type));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into images (uid, recipeuid,recipeid, caption, width, height, submittedBy, type) values (?, ?, ?, ?, ?, ?, ?, ?)", array($this->uid, $this->recipeuid, $this->recipeid, $this->caption, $this->width, $this->height, $this->submittedBy, $this->type));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
-    $this->id = $id;
   }
   
   function remove($db = null) {
@@ -178,7 +177,7 @@ class Image extends BaseRecord {
     unlink($this->getThumbPath());
     $cascade = isset($db);
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $this->runQuery($db, "delete from images where id = ?", array($this->id));
     if(!$cascade) {
@@ -190,9 +189,9 @@ class Image extends BaseRecord {
   function &load($id, $db = null) {
     $cascade = isset($db);
 	if (!isset($db)) {
-	    $db =& BaseRecord::getDb();
+	    $db = BaseRecord::getDb();
 	}
-    $result =& BaseRecord::runQuery($db, "select images.id id, recipeid, recipeuid, caption, width, height, submittedBy, images.createDate createDate, name, type, uid from images,users where images.id = ? and users.id = images.submittedby", array($id));
+    $result = BaseRecord::runQuery($db, "select images.id id, recipeid, recipeuid, caption, width, height, submittedBy, images.createDate createDate, name, type, uid from images,users where images.id = ? and users.id = images.submittedby", array($id));
     $img = null;
     if($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $img = new Image();

@@ -69,12 +69,11 @@ class Category extends BaseRecord {
   function dbCreateNew($db = null) {
     $cascade = isset($db);
     if(!$cascade) {
-      $db =& $this->getDb();
+      $db = $this->getDb();
     }
-    $id = $db->nextId("categories");
-    $this->runQuery($db, "insert into categories (id, name, createdate) values (?, ?, now())", 
-                    array($id, $this->name));
-    $this->id = $id;
+    $this->runQuery($db, "insert into categories (name, createdate) values (?, now())",
+                    array($this->name));
+    $this->id = $db->lastInsertId();
     if(!$cascade) {
       $db->commit();
       $db->disconnect();
@@ -95,12 +94,12 @@ class Category extends BaseRecord {
     for($i = 0; $i < count($notIn); $i++) {
       $questions[] = "?";
     }
-    $db =& BaseRecord::getDb();
-    $results =& BaseRecord::runQuery($db, "select * from categories " . 
+    $db = BaseRecord::getDb();
+    $results = BaseRecord::runQuery($db, "select * from categories " . 
                                     "where id not in (" . 
                                     implode(",", $questions) . ")", $notIn);
                                     
-    $cats =& Category::processResults($results);
+    $cats = Category::processResults($results);
     $db->disconnect();
     return $cats;
   }
@@ -110,15 +109,15 @@ class Category extends BaseRecord {
    */
 
   function &loadAllCategories() {
-    $db =& BaseRecord::getDb();
-    $results =& BaseRecord::runQuery($db, "select * from categories");
+    $db = BaseRecord::getDb();
+    $results = BaseRecord::runQuery($db, "select * from categories");
                                     
-    $cats =& Category::processResults($results);
+    $cats = Category::processResults($results);
     $db->disconnect();
     return $cats;
   }
 
-  function &processResults(&$results) {
+  function &processResults($results) {
     $categories = array();
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $cat = new Category();
@@ -147,14 +146,14 @@ class Category extends BaseRecord {
 		if(!isset($db)) {
 			$db = BaseRecord::getDb();
 		}
-		$results =& BaseRecord::loadMultipleBasic(new CategoryFactory(),
+		$results = BaseRecord::loadMultipleBasic(new CategoryFactory(),
 			$qualifiers, $limit, $db, "name");
 		// load up the recipe counts for the various objects
 		$foo = array();
 		foreach($results as $cat) {
 			$qualifiers = array("categoryid" => $cat->id);
 			$query = "SELECT count(recipeid) from recipetocategory " . BaseRecord::buildWhereClauseDb($qualifiers);
-			$result =& BaseRecord::runQuery($db,$query, BaseRecord::prepareQualifiers($qualifiers));
+			$result = BaseRecord::runQuery($db, $query, BaseRecord::prepareQualifiers($qualifiers));
 			$c = 0;
 			if($result->fetchInto($row, DB_FETCHMODE_ORDERED)) {
 				$c = $row[0];

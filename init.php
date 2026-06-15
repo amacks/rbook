@@ -20,7 +20,7 @@
 
 /* the version of rbook  */
 define("RBOOK_VERSION", "2.4");
-require_once('DB.php');
+require_once(dirname(__FILE__) . '/helpers/db.php');
 require_once(dirname(__FILE__) . '/helpers/resources.php');
 require_once(dirname(__FILE__) . '/extlib/Smarty/Smarty.class.php');
 require_once(dirname(__FILE__) . '/extlib/Smarty/internals/core.write_file.php');

@@ -64,18 +64,17 @@ class Guestbook extends BaseRecord {
 	else
 		$pdate = date("YmdHis", time());
 		
-    $db =& $this->getDb();
-    $id = $db->nextId("guestbook");
-    $this->runQuery($db, "insert into guestbook (id, name, comment, postdate) values (?, ?, ?, ?)",
-	  array($id, $this->name, $this->comment, $pdate));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into guestbook (name, comment, postdate) values (?, ?, ?)",
+	  array($this->name, $this->comment, $pdate));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
-    $this->id = $id;
   }
   function remove($db = null) {
     $cascade = isset($db);
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $this->runQuery($db, "delete from guestbook where id = ?", array($this->id));
     if(!$cascade) {

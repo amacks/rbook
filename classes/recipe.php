@@ -176,11 +176,11 @@ class Recipe extends BaseRecord {
    */
 
   function dbUpdate($db = null) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $query = "UPDATE recipes SET name = ?, preheat = ? " .
       ",source = ?, serves = ?, cooktime =?, preptime = ?,note = ?, description = ?, modifieddate = now(), cached_rating = ?, cached_ratinghits = ? WHERE ID = ?";
 
-    $result =& $this->runQuery($db, $query,
+    $result = $this->runQuery($db, $query,
                                array($this->title, $this->preheat,
                                      $this->source,
                                      $this->serves,
@@ -192,7 +192,7 @@ class Recipe extends BaseRecord {
                                      $this->cachedRatingHits,
                                      $this->id));
 
-    $result =& $this->runQuery($db, "select id from ingredientsets where recipeid = ?",
+    $result = $this->runQuery($db, "select id from ingredientsets where recipeid = ?",
                                $this->id);
 
     $sets = array();
@@ -206,7 +206,7 @@ class Recipe extends BaseRecord {
         $this->runQuery($db, "delete from ingredients where setid = ?", $sets[$i]);
       }
 
-      $result =& $this->runQuery($db, "delete from ingredientsets " .
+      $result = $this->runQuery($db, "delete from ingredientsets " .
                                  $this->buildWhereClauseDb($qualifiers),
                                  $this->prepareQualifiers($qualifiers));
     }
@@ -230,10 +230,10 @@ class Recipe extends BaseRecord {
 
   function updateSteps(&$db) {
     $numSteps = count($this->steps);
-    $result =& $this->runQuery($db, "delete from steps where recipeid = ? and orderid >= ?",
+    $result = $this->runQuery($db, "delete from steps where recipeid = ? and orderid >= ?",
                                array($this->id, $numSteps));
 
-    $results =& $this->runQuery($db, "select count(*) from steps where recipeid = ?",
+    $results = $this->runQuery($db, "select count(*) from steps where recipeid = ?",
                                 $this->id);
 
     $results->fetchInto($row, DB_FETCHMODE_ORDERED);
@@ -245,9 +245,8 @@ class Recipe extends BaseRecord {
         $result = $this->runQuery($db,"update steps set step = ? where recipeid = ? and orderid = ?",
                                   array($value, $this->id, $i));
       } else {
-        $stepid = $db->nextId("steps");
-        $result =& $this->runQuery($db,"INSERT INTO steps (id, recipeid, orderid, step) values (?, ?, ?, ?)",
-                                   array($stepid, $this->id, $i, $value));
+        $result = $this->runQuery($db,"INSERT INTO steps (recipeid, orderid, step) values (?, ?, ?)",
+                                   array($this->id, $i, $value));
       }
       $i++;
     }
@@ -264,8 +263,7 @@ class Recipe extends BaseRecord {
    * @access private
    */
   function dbCreateNew($db = null) {
-    $db =& $this->getDb();
-    $id = $db->nextId("recipes");
+    $db = $this->getDb();
 	
 	// Change empty strings to null values
 	if (isset($this->serves) && $this->serves == '')
@@ -286,17 +284,16 @@ class Recipe extends BaseRecord {
 	/**
 	* For saving the createdate on import.
 	* The date must be a MySQL-Timestamp YYYYMMDDhhmmss.
-	* When iserting a new recipe, the current timestamp is used.
+	* When inserting a new recipe, the current timestamp is used.
 	*/
 	if(isset($this->createdate) && $this->createdate != null)
 		$cdate = $this->createdate;
 	else
 		$cdate = date("YmdHis", time());
 	
-    $result =& $this->runQuery($db,"INSERT INTO recipes (id, name, source, submittedby, serves, cooktime, preptime, note, description, " .
-                               "preheat, uniqueid, createdate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                               array($id,
-									 $this->title,
+    $result = $this->runQuery($db,"INSERT INTO recipes (name, source, submittedby, serves, cooktime, preptime, note, description, " .
+                               "preheat, uniqueid, createdate) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                               array($this->title,
 									 $this->source,
 									 $this->submittedById,
 									 $this->serves,
@@ -308,7 +305,7 @@ class Recipe extends BaseRecord {
 									 $this->uid,
 									 $cdate));
 
-    $this->id = $id;
+    $this->id = $db->lastInsertId();
 
     $this->updateCategories($db);
 
@@ -318,9 +315,8 @@ class Recipe extends BaseRecord {
       $i++;
     }
     for($i =0; $i < count($this->steps); $i++) {
-      $stepid = $db->nextId("steps");
-      $result =& $this->runQuery($db,"INSERT INTO steps (id, recipeid, orderid, step) values (?, ?, ?, ?)",
-                                 array($stepid, $this->id, $i, $this->steps[$i]));
+      $result = $this->runQuery($db,"INSERT INTO steps (recipeid, orderid, step) values (?, ?, ?)",
+                                 array($this->id, $i, $this->steps[$i]));
     }
 
     $db->commit();
@@ -351,7 +347,7 @@ class Recipe extends BaseRecord {
    */
 
   function loadElements(&$db) {
-    $result =& $this->runQuery($db, "select categories.id as id, categories.name as name from categories,recipetocategory where recipeid = ? and categories.id = recipetocategory.categoryid", array($this->id));
+    $result = $this->runQuery($db, "select categories.id as id, categories.name as name from categories,recipetocategory where recipeid = ? and categories.id = recipetocategory.categoryid", array($this->id));
     $this->categories = array();
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $c = new Category();
@@ -359,7 +355,7 @@ class Recipe extends BaseRecord {
       $c->name = $row['name'];
       $this->categories[] = $c;
     }
-    $result =& $this->runQuery($db,"select id, name from ingredientsets where recipeid = ? order by orderid",
+    $result = $this->runQuery($db,"select id, name from ingredientsets where recipeid = ? order by orderid",
                                array($this->id));
 
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -373,7 +369,7 @@ class Recipe extends BaseRecord {
     $query = "select amount, description, setid from ingredients where setid = ? order by orderid";
     $statement = $db->prepare($query);
     foreach($this->ingredients as $setName => $set) {
-      $result =& $db->execute($statement, $set->id);
+      $result = $db->execute($statement, $set->id);
 
       while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
         $ingredient = new Ingredient();
@@ -383,15 +379,15 @@ class Recipe extends BaseRecord {
       }
     }
 
-    $result =& $this->runQuery($db,"select step from steps where recipeid = ? order by orderid", array($this->id));
+    $result = $this->runQuery($db,"select step from steps where recipeid = ? order by orderid", array($this->id));
     $this->steps = array();
 
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $this->steps[] = $row['step'];
     }
 
-    $images =& Image::findForRecipe($this->id, null, $db);
-    $this->images =& $images;
+    $images = Image::findForRecipe($this->id, null, $db);
+    $this->images = $images;
 
 
   }
@@ -405,7 +401,7 @@ class Recipe extends BaseRecord {
    */
 
   function remove() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     rb_log("REMOVING RECIPE: " . $this->id);
     $this->removeImages($db);
     // Let the cascade remove all the children
@@ -417,7 +413,7 @@ class Recipe extends BaseRecord {
   function removeImages($db = null) {
     $cascade = isset($db);
     if(!$cascade) {
-      $db =& $this->getDb();
+      $db = $this->getDb();
     }
     // images have a file-system component, so they have to be deleted manually.
     $images = Image::loadMultiple(array("recipeid" => $this->id), null, $db);
@@ -435,7 +431,7 @@ class Recipe extends BaseRecord {
     function removeImage($imageid, $db = null) {
     $cascade = isset($db);
     if(!$cascade) {
-      $db =& $this->getDb();
+      $db = $this->getDb();
     }
     // images have a file-system component, so they have to be deleted manually.
     $image = Image::load($imageid, $db);
@@ -448,14 +444,10 @@ class Recipe extends BaseRecord {
     }
   }
 
-  /**
-   Increments the number of times the recipe was visited
-  */
-
   function incrementViewCount($recipe, $db = null) {
 	$cascade = isset($db);
 	if(!$cascade) {
-	  $db =& $this->getDb();
+	  $db = $this->getDb();
 	}
 
 	BaseRecord::runQuery($db, "update recipes set visits = ?, lastvisit = now() where ID = ?",
@@ -473,9 +465,9 @@ class Recipe extends BaseRecord {
    */
 
   function &load($id) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
 
-    $result =& BaseRecord::runQuery($db,"select recipes.serves, cooktime, preptime, visits, lastvisit, recipes.name as recipe_name,source,preheat,uniqueid" .
+    $result = BaseRecord::runQuery($db,"select recipes.serves, cooktime, preptime, visits, lastvisit, recipes.name as recipe_name,source,preheat,uniqueid" .
                                     ",categories.name as category_name,recipes.id,recipes.note,recipes.description, recipes.createdate as cd," .
                                     "users.username as submittedbyusername, users.name " .
                                     "as submittedbyname,submittedby from recipes, " .
@@ -502,10 +494,10 @@ class Recipe extends BaseRecord {
    */
 
   function categoriesUsed($categories) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $qualifiers = array("categoryid" => $categories);
     $query = "SELECT count(recipeid) from recipetocategory " . BaseRecord::buildWhereClauseDb($qualifiers);
-    $result =& BaseRecord::runQuery($db,$query, BaseRecord::prepareQualifiers($qualifiers));
+    $result = BaseRecord::runQuery($db,$query, BaseRecord::prepareQualifiers($qualifiers));
     
     $rc = false;
     if($result->fetchInto($row, DB_FETCHMODE_ORDERED)) {
@@ -516,21 +508,15 @@ class Recipe extends BaseRecord {
   }
 
   function updateRating($rating, $ratingHits) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $this->runQuery($db, "update recipes set cached_rating = ?, cached_ratinghits = ? where id = ?",
                     array($rating, $ratingHits, $this->id));
     $db->commit();
     $db->disconnect();
   }
 
-  /**
-   * Puts any recipe that are in any of the categories in the category
-   * list in the category specified by toCategory.
-   * @param categories a list of category ids
-   * @param toCategory the category to put the recipes in
-   */
   function changeCategories($categories, $toCategory) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $qualifiers = array("categoryid" => $categories);
     $query = "update ignore recipetocategory set categoryid = ? " .
       BaseRecord::buildWhereClauseDb($qualifiers);
@@ -543,46 +529,38 @@ class Recipe extends BaseRecord {
   }
 
   function &searchByAuthor($authorId) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
       "users.name as uname, users.id as uid, users.username as username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
       "where users.id = ? and recipes.submittedby = users.id " .
       "order by recipes.createdate desc";
-    $res =& BaseRecord::runQuery($db, $query, array($authorId));
+    $res = BaseRecord::runQuery($db, $query, array($authorId));
     return Recipe::processResults($db, $res);
   }
 
   function &searchByMostRecentAndAuthor($limit, $authorId) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
       "users.name as uname, users.id as uid, users.username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
       "where users.id = ? and recipes.submittedby = users.id " .
       "order by recipes.createdate desc";
-    $res =& $db->limitQuery($query, 0, $limit, array($authorId));
+    $res = $db->limitQuery($query, 0, $limit, array($authorId));
     return Recipe::processResults($db, $res);
   }
 
-  /**
-   Searches for the most popular recipes
-   */
-
   function &searchForMostPopular($limit) {
-	$db =& BaseRecord::getDb();
+	$db = BaseRecord::getDb();
 	$query = BASE_SEARCH_QUERY .
 	  "where recipes.submittedby = users.id order by visits desc";
-	$res =& $db->limitQuery($query, 0, $limit);
+	$res = $db->limitQuery($query, 0, $limit);
 	return Recipe::processResults($db, $res);
   }
 
-  /**
-   * Searches for the most recent recipes added to the database. 
-   */
-
   function &searchForMostRecent($limit) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $query = BASE_SEARCH_QUERY .
       "where recipes.submittedby = users.id order by recipes.createdate desc";
-    $res =& $db->limitQuery($query, 0, $limit);
+    $res = $db->limitQuery($query, 0, $limit);
     return Recipe::processResults($db, $res);
   }
 
@@ -599,11 +577,11 @@ class Recipe extends BaseRecord {
   }
 
   function &searchByTitle($title) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $title = $db->escapeSimple($title);
     $query = BASE_SEARCH_QUERY . " WHERE recipes.name like '$title%'" .
       " and recipes.submittedby = users.id order by recipes.name";
-    $res =& BaseRecord::runQuery($db,$query);
+    $res = BaseRecord::runQuery($db,$query);
 
     return Recipe::processResults($db, $res);
   }
@@ -612,18 +590,18 @@ class Recipe extends BaseRecord {
     if(empty($keyword)) {
       return Recipe::searchByTitle($keyword);
     }
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $keyword = $db->escapeSimple($keyword);
     $query = BASE_SEARCH_QUERY . ",steps where (recipes.name like '%" . $keyword . "%'".
       " or steps.step like '%$keyword%') and recipes.submittedby = users.id " .
       " and steps.recipeid = recipes.id order by recipes.name";
 
-    $res =& BaseRecord::runQuery($db,$query);
+    $res = BaseRecord::runQuery($db,$query);
     
     return Recipe::processResults($db, $res);
   }
 
-  function &processResults($db, &$res) {
+  function &processResults($db, $res) {
     $resultSet = array();
     while ($res->fetchInto($row,  DB_FETCHMODE_ASSOC)) {
       $resultSet[] = new SearchResult($row['title'], buildViewUrl($row['recipeid']),
@@ -639,23 +617,23 @@ class Recipe extends BaseRecord {
 
   function addImages(&$db, &$results) {
     for($i = 0; $i < count($results); $i++) {
-      $foo =& $results[$i];
-      $images =& Image::findForRecipe($foo->recipeId);
+      $foo = $results[$i];
+      $images = Image::findForRecipe($foo->recipeId);
       if(count($images) > 0) {
-        $image =& $images[0];
+        $image = $images[0];
         $foo->image = $image->getThumbWebPath();
       }
     }
   }
 
   function &searchByCategory($categoryId) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title,recipes.description," .
       "users.name as uname, users.username as username, recipes.cached_rating, recipes.cached_ratinghits, recipetocategory.categoryid as categoryid," .
       "users.id as uid,recipes.createdate as cd  " .
       "FROM recipes,users,recipetocategory WHERE recipetocategory.categoryid = ? " .
       "and recipetocategory.recipeid = recipes.id and recipes.submittedby = users.id order by recipes.name";
-    $res =& BaseRecord::runQuery($db,$query, array($categoryId));
+    $res = BaseRecord::runQuery($db,$query, array($categoryId));
     return Recipe::processResults($db, $res);
   }
 
@@ -667,26 +645,20 @@ class Recipe extends BaseRecord {
     return $foo;
   }
   
-  /**
-     * Get a random ID from the db.
-     **/	 
   function &getRandomId() {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $query = "SELECT id FROM recipes ORDER BY RAND() LIMIT 1";
-    $res =& BaseRecord::runQuery($db,$query);
-	$res->fetchInto($row,  DB_FETCHMODE_ASSOC);
-    return $row[id];
+    $res = BaseRecord::runQuery($db,$query);
+	$res->fetchInto($row, DB_FETCHMODE_ASSOC);
+    return $row['id'];
   }
   
-  /**
-     * Gets the number of all available recipes in the db.
-     **/	 
   function &getRecipeCount() {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
     $query = "SELECT count(id) number FROM recipes";
-    $res =& BaseRecord::runQuery($db,$query);
-	$res->fetchInto($row,  DB_FETCHMODE_ASSOC);
-    return $row[number];
+    $res = BaseRecord::runQuery($db,$query);
+	$res->fetchInto($row, DB_FETCHMODE_ASSOC);
+    return $row['number'];
   }
 }
 ?>

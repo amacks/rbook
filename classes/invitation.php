@@ -58,7 +58,7 @@ class Invitation extends BaseRecord {
   }
 
   function delete() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "delete from invitations where invitee = ? and inviter = ?", 
                     array($this->invitee, $this->inviter));
     $db->commit();
@@ -74,7 +74,7 @@ class Invitation extends BaseRecord {
   }
 
   function dbUpdate() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "update invitations set " .
                     "code = ?, modifieddate = now(), acceptdate = ?",
                     array($this->code, 
@@ -84,9 +84,9 @@ class Invitation extends BaseRecord {
   }
 
   function load($code) {
-    $db =& BaseRecord::getDb();
+    $db = BaseRecord::getDb();
 
-    $results =& BaseRecord::runQuery($db, "select invitee, inviter, code, createdate, modifieddate, " .
+    $results = BaseRecord::runQuery($db, "select invitee, inviter, code, createdate, modifieddate, " .
                                 "acceptdate, createdate  from invitations where code = ?",
                                 array($code));
     $invite = null;
@@ -99,7 +99,7 @@ class Invitation extends BaseRecord {
   }
 
   function dbCreateNew() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
     $this->runQuery($db, "insert into invitations (invitee, inviter, code, " .
                     "modifieddate, acceptdate, createdate) values (?, ?, ?, now(), NULL, NULL)",
