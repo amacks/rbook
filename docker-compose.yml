@@ -1,0 +1,41 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DBHOST: db
+      DBNAME: rbook
+      DBUSER: rbook
+      DBPASSWORD: rbook_password
+      APPROOT: /
+      APPTITLE: "My Recipes"
+      # IMAGEMAGICK: /usr/bin/convert
+      # IMPORTDIR: /var/rbook/import
+      # ALLOW_REGISTRATION: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Persist Smarty compiled templates across restarts (optional)
+      - templates_c:/var/www/html/skins/default/templates_c
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: rbook
+      MYSQL_USER: rbook
+      MYSQL_PASSWORD: rbook_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "rbook", "--password=rbook_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  db_data:
+  templates_c:
