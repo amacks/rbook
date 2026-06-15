@@ -356,7 +356,7 @@ class UserController extends BaseController {
       $this->flash(getMessage("accountDisabled"));
       $this->activateAction("show_login");
     }
-echo "<!-- in login controller" . $_POST['user'] . " " . $_POST['password'] . "-->";
+error_log("<!-- in login controller" . $_POST['user'] . " " . $_POST['password'] . "-->");
     if($theUser->validateLogin($_POST['password'])) {
       $theUser->upgradePasswordHashIfNeeded($_POST['password']);
       $_SESSION['user'] = $theUser;
