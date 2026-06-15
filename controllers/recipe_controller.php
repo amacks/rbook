@@ -195,7 +195,7 @@ class RecipeController extends BaseController {
       $this->flash(getMessage('invalidAction'));
       $this->activateDefault();
     }
-    $user =& getUser();
+    $user = getUser();
     
     $recipe = new Recipe();
     $recipe->submittedById = $user->id;
@@ -217,10 +217,10 @@ class RecipeController extends BaseController {
       gotoReferrer();
     }
 
-    $recipe =& $this->getRecipe(false);
+    $recipe = $this->getRecipe(false);
 
     if($this->isPost()) {
-      $user =& getUser();
+      $user = getUser();
       $comment = new Comment();
       $comment->userid = $user->id;
       $comment->recipeid = $recipe->id;
@@ -258,14 +258,14 @@ class RecipeController extends BaseController {
     }
     
     $comment = Comment::loadOne(array("id" => $commentId));
-    $user =& getUser();
+    $user = getUser();
     // verify the user is either the owner of the comment or an admin user
     if($user->id != $comment->userid && !isAdminUser()) {
       $this->flash(getMessage("noPermissionToDeleteComment"));
       $this->activateDefault();
     }
     $comment->remove();
-	$recipe =& $this->getRecipe(false);
+	$recipe = $this->getRecipe(false);
 	$comments = Comment::findByRecipe($recipe->id);
       
 	calculateRating($comments, $rating, $ratingHits);
@@ -282,14 +282,14 @@ class RecipeController extends BaseController {
    */
 
   function save_picture() {
-    $recipe =& $this->getRecipe(false);
+    $recipe = $this->getRecipe(false);
     if($this->isPost()) {
       if(strlen($_POST['cancel']) > 3) {
         $this->activateDefault();
       } else {
         if(is_uploaded_file($_FILES['imagefile']['tmp_name'])) {
           $image = new Image();
-          $user =& getUser();
+          $user = getUser();
           
           $image->caption = $_POST['caption'];
           $image->recipeid = $recipe->id;
@@ -329,7 +329,7 @@ class RecipeController extends BaseController {
   }
   
   function remove_picture($id = null) {
-    $recipe =& $this->getRecipe(true);
+    $recipe = $this->getRecipe(true);
     if (isset($id)) {
 	   // Just delete a single picture
 	   $recipe->removeImage($id);
@@ -378,7 +378,7 @@ class RecipeController extends BaseController {
    * Deletes the active recipe.
    */
   function delete() {
-    $recipe =& $this->getRecipe(true);
+    $recipe = $this->getRecipe(true);
     if(isset($recipe)) {
       $recipe->remove();
 	  unset($_SESSION['categories']);
@@ -405,11 +405,11 @@ class RecipeController extends BaseController {
    */
   function author($authorId) {
     $results = Recipe::searchByAuthor($authorId);
-    $u =& User::loadOne(array("id" => $authorId));
+    $u = User::loadOne(array("id" => $authorId));
     $rset = new ResultSet(RESULTS_PER_PAGE, $results);
     $rset->name = getMessage("recipesBy") . $u->name;
     $rset->displayResultCount = false;
-    $_SESSION['results'] =& $rset;
+    $_SESSION['results'] = $rset;
     $this->activateController("recipe", "results", "1");
   }
 
@@ -421,7 +421,7 @@ class RecipeController extends BaseController {
     $rset->name = $cat->name;
     $rset->displayResultCount = false;
 	$rset->fromPage = 'category';
-    $_SESSION['results'] =& $rset;
+    $_SESSION['results'] = $rset;
     $this->activateController("recipe", "results", "1");
   }
 
@@ -432,7 +432,7 @@ class RecipeController extends BaseController {
       $this->activateController("recipe", "view", $results[0]->recipeId);
     }
     $rset = new ResultSet(RESULTS_PER_PAGE, $results);
-    $_SESSION['results'] =& $rset;
+    $_SESSION['results'] = $rset;
 	$rset->fromPage = 'search';
 	$rset->name = $_GET['search'];
     $rset->displayResultCount = false;
@@ -443,7 +443,7 @@ class RecipeController extends BaseController {
     if(!empty($id)) {
       $recipe = Recipe::load($id);
     } else {
-      $recipe =& getActiveRecipe();
+      $recipe = getActiveRecipe();
     }
     
     if(!isset($recipe)) {
@@ -462,7 +462,7 @@ class RecipeController extends BaseController {
      * Saves a recipe. This method is called from the UI.
      */
   function save() {
-    $recipe =& $this->getRecipe(true);
+    $recipe = $this->getRecipe(true);
 	if(isset($_POST['discardAndView'])) {
 	  if($recipe->isNew()) {
 		$this->activateAction("index");

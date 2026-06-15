@@ -110,7 +110,7 @@ class Importer extends BaseRecord {
 	foreach($this->commentson as $rid => $oldRid) {
 	  $comments = Comment::findByRecipe($rid);
 	  calculateRating($comments, $rating, $ratingHits);
-	  $recipe =& $this->recipes[$oldRid];
+	  $recipe = $this->recipes[$oldRid];
 	  if(isset($recipe)) {
 		$recipe->updateRating($rating, $ratingHits);
 	  }
@@ -202,14 +202,14 @@ class Importer extends BaseRecord {
 
   function handleImage($parser, $attributes) {
     $image = new Image();
-    $recipe =& $this->recipes[$attributes['recipeid']];
+    $recipe = $this->recipes[$attributes['recipeid']];
     $image->recipeid = $recipe->id;
     $image->caption = $attributes['caption'];
     $image->recipeuid = $attributes['recipeuid'];
     $image->uid = $attributes['uid'];
     $image->width = $attributes['width'];
     $image->height = $attributes['height'];
-    $user =& $this->users[$attributes['submittedby']];
+    $user = $this->users[$attributes['submittedby']];
     $image->submittedBy = $user->id;
     $image->type = $attributes['type'];
     $image->save();
@@ -222,14 +222,14 @@ class Importer extends BaseRecord {
 	$comment->recipeid = $recipe->id;
 	$this->commentson[$comment->recipeid] = $attributes['recipeid'];
 	$comment->rating = $attributes['rating'];
-	$user =& $this->users[$attributes['userid']];
+	$user = $this->users[$attributes['userid']];
 	$comment->userid = $user->id;
 	$comment->postDate = $attributes['postdate'];
-	$this->comment =& $comment;
+	$this->comment = $comment;
   }
 
   function handleCommentEnd($parser) {
-	$comment =& $this->comment;
+	$comment = $this->comment;
 	$comment->save();
 	$this->oncomment = 0;
   }
@@ -239,19 +239,19 @@ class Importer extends BaseRecord {
 	$guestbookentry = new Guestbook();
 	$guestbookentry->name = $attributes['name'];
 	$guestbookentry->postdate = $attributes['postdate'];
-	$this->guestbookentry =& $guestbookentry;
+	$this->guestbookentry = $guestbookentry;
 	}
 
   function handleGuestbookEnd($parser) {
-	$guestbookentry =& $this->guestbookentry;
+	$guestbookentry = $this->guestbookentry;
 	$guestbookentry->save();
 	$this->oncomment = 0;
   }
   
   function handleMine($parser, $attributes) {
     $mine = new Mine();
-    $recipe =& $this->recipes[$attributes['recipeid']];
-    $user =& $this->users[$attributes['userid']];
+    $recipe = $this->recipes[$attributes['recipeid']];
+    $user = $this->users[$attributes['userid']];
     $mine->userid = $user->id;
     $mine->recipeid = $recipe->id;
     $mine->save();
@@ -262,7 +262,7 @@ class Importer extends BaseRecord {
   }
 
   function handleDescriptionEnd($parser) {
-	$r =& $this->recipe;
+	$r = $this->recipe;
 	$r->description = $this->description;
 	$this->ondescription =0;
   }
@@ -273,28 +273,28 @@ class Importer extends BaseRecord {
 
   function handleNoteEnd($parser) {
     $this->onnote = 0;
-    $r =& $this->recipe;
+    $r = $this->recipe;
     $r->note = $this->note;
   }
 
   function handleIngredient($parser, $attributes) {
-    $iset =& $this->iset;
+    $iset = $this->iset;
     $ingredient = new stdClass();
     $ingredient->amount = $attributes['amount'];
     $ingredient->description = $attributes['description'];
     $ingredient->order = $this->iCounter++;
-    $iset->rows[] =& $ingredient;
+    $iset->rows[] = $ingredient;
   }
 
   function handleIngredientSetEnd($parser) {
-    $r =& $this->recipe;
+    $r = $this->recipe;
     $r->addIngredientSet($this->iset);
     $this->iset = null;
   }
 
   function handleIngredientSet($parser, $attributes) {
     $this->iset = new IngredientSet();
-    $iset =& $this->iset;
+    $iset = $this->iset;
     $iset->id = $iset->id . $this->counter;
     $iset->name = $attributes['name'];
     $this->iCounter = 0;
@@ -302,7 +302,7 @@ class Importer extends BaseRecord {
 
   function handleRecipeCategory($parser, $attributes) {
     $cat = $this->categories[$attributes['id']];
-    $r =& $this->recipe;
+    $r = $this->recipe;
     $r->categories[] = $cat;
   }
   
@@ -313,7 +313,7 @@ class Importer extends BaseRecord {
   function handleStepEnd($parser) {
     $this->onstep = 0;
     if(isset($this->step)) {
-      $r =& $this->recipe;
+      $r = $this->recipe;
       $r->addStep($this->step);
       unset($step);
     }
@@ -341,12 +341,12 @@ class Importer extends BaseRecord {
     $r->serves = $attributes['serves'];
 	$r->cooktime = $attributes['cooktime'];
 	$r->preptime = $attributes['preptime'];
-    $this->recipe =& $r;
+    $this->recipe = $r;
     $this->recipeId = $attributes['id'];
   }
   
   function handleRecipeEnd($parser) {
-    $r =& $this->recipe;
+    $r = $this->recipe;
     if(empty($r->submittedById)) {
       return;
     }
@@ -372,7 +372,7 @@ class Importer extends BaseRecord {
     $user->readonly = $attributes['readonly'];
     $user->invited = $attributes['invited'];
     $user->save();
-    $this->users[$attributes['id']] =& $user;
+    $this->users[$attributes['id']] = $user;
   }
   
   function handleUsers($parser, $tag, $attributes) {
@@ -382,7 +382,7 @@ class Importer extends BaseRecord {
     $cat = new Category();
     $cat->name = $attributes['name'];
     $cat->save();
-    $this->categories[$attributes['id']] =& $cat;
+    $this->categories[$attributes['id']] = $cat;
   }
 
   function handleCategories($parser, $tag, $attributes) {
@@ -392,14 +392,14 @@ class Importer extends BaseRecord {
     if($this->onstep) {
       $this->step = $data;
     } else if($this->onguestbook) {
-	  $guestbookentry =& $this->guestbookentry;
+	  $guestbookentry = $this->guestbookentry;
 	  $guestbookentry->comment = $data;
 	} else if($this->onnote) {
       $this->note = $data;
     } else if($this->ondescription) {
 	  $this->description = $data;
 	} else if($this->oncomment) {
-	  $comment =& $this->comment;
+	  $comment = $this->comment;
 	  $comment->comment = $data;
 	}
   }

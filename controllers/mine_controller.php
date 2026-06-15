@@ -47,9 +47,9 @@ class MineController extends BaseController {
   function take($id) {
 	$user = $_SESSION['user'];
 	if(isset($id)) {
-	  $recipe =& Recipe::load($id);
+	  $recipe = Recipe::load($id);
 	} else {
-	  $recipe =& $_SESSION['recipe'];
+	  $recipe = $_SESSION['recipe'];
 	}
 	
 	if(!isset($recipe)) {
@@ -70,7 +70,7 @@ class MineController extends BaseController {
 	unset($_SESSION['lastsearch']);
 	unset($_SESSION['recipe']);
 
-	$rset =& $_SESSION['mine'];
+	$rset = $_SESSION['mine'];
 	$button = new stdClass();
 	$button->url = buildLink("mine", "delete", "%d");
 	$button->name = getMessage('remove');
@@ -115,7 +115,7 @@ class MineController extends BaseController {
 	$rset = new ResultSet(7, $results);
 	$rset->name = getMessage("MyRecipes");
 	$rset->displayResultCount = false;
-	$_SESSION['mine'] =& $rset;
+	$_SESSION['mine'] = $rset;
 	$this->activateController("mine", "results", "1");
   }
 

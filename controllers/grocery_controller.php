@@ -48,7 +48,7 @@ class GroceryController extends BaseController {
    */
 
   function save_in_place() {
-	$user =& getUser();
+	$user = getUser();
 	$this->saveCommon($user);
 	echo("SAVED");
   }
@@ -81,13 +81,13 @@ class GroceryController extends BaseController {
 	if(isset($_POST['clear'])) {
 	  $this->activateAction('clear');
 	}
-	$user =& getUser();
+	$user = getUser();
 	$this->saveCommon($user);
 	$this->activateDefault();
   }
 
   function clear() {
-	$user =& getUser();
+	$user = getUser();
 	GroceryList::deleteMultiple(array('userid' => $user->id));
 	$this->activateDefault();
   }
@@ -113,7 +113,7 @@ class GroceryController extends BaseController {
   function update($item) {
 	$item = $_POST['arg'];
     header("Content-type: text/plain");
-	$user =& getUser();
+	$user = getUser();
 	$list = GroceryList::findByUser($user->id);
 	if(!empty($item)) {
 	  $gi = new GroceryList();

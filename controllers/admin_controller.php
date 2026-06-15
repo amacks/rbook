@@ -43,7 +43,7 @@ class AdminController extends BaseController {
 
   function index() {
 	$page_title = getMessage("Admin");
-	$smarty =& prepareSmarty();
+	$smarty = prepareSmarty();
 	$smarty->assign("selectedTab", "admin");
 	$smarty->assign("title", $page_title);
 	$smarty->display(getFullTemplateName("viewAdmin"));

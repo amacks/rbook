@@ -127,7 +127,7 @@ class ExporterController extends BaseController {
     $exportFile = IMPORTDIR . "/" . $_POST['exportFile'];
     $exporter->exportFile($exportFile);
     $_SESSION['exportFile'] = $_POST['exportFile'];
-    $_SESSION['exporter'] =& $exporter;
+    $_SESSION['exporter'] = $exporter;
     setPageError(getMessage('exportSuccessful'));
     $this->activateAction("show_results");
   }
