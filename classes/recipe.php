@@ -36,30 +36,30 @@ define("BASE_SEARCH_QUERY", "SELECT distinct recipes.id as recipeid," .
     "recipes.createdate as cd, users.id as uid, users.username as username  from recipes,users ");
 
 class Recipe extends BaseRecord {
-  var $preptime;
-  var $cooktime;
-  var $serves;
-  var $title;
-  var $preheat;
-  var $source;
-  var $categoryName;
-  var $categoryId;
-  var $ingredients;
-  var $steps;
-  var $submittedById;
-  var $submittedByName;
-  var $submittedByUserName;
-  var $createdate;
-  var $images;
-  var $uid;
-  var $description;
-  var $cachedRating;
-  var $cachedRatingHits;
-  var $lastViewed;
-  var $viewCount;
+  public $preptime;
+  public $cooktime;
+  public $serves;
+  public $title;
+  public $preheat;
+  public $source;
+  public $categoryName;
+  public $categoryId;
+  public $ingredients;
+  public $steps;
+  public $submittedById;
+  public $submittedByName;
+  public $submittedByUserName;
+  public $createdate;
+  public $images;
+  public $uid;
+  public $description;
+  public $cachedRating;
+  public $cachedRatingHits;
+  public $lastViewed;
+  public $viewCount;
 
-  function Recipe() {
-    $this->BaseRecord();
+  function __construct() {
+    parent::__construct();
     $this->title = getMessage("NewTitle");
     $this->ingredients = array();
     $this->steps = array();
@@ -464,7 +464,7 @@ class Recipe extends BaseRecord {
    * recipe object or null if it cannot be found.
    */
 
-  function &load($id) {
+  function load($id) {
     $db = BaseRecord::getDb();
 
     $result = BaseRecord::runQuery($db,"select recipes.serves, cooktime, preptime, visits, lastvisit, recipes.name as recipe_name,source,preheat,uniqueid" .
@@ -528,7 +528,7 @@ class Recipe extends BaseRecord {
     $db->disconnect();
   }
 
-  function &searchByAuthor($authorId) {
+  function searchByAuthor($authorId) {
     $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
       "users.name as uname, users.id as uid, users.username as username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
@@ -538,7 +538,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function &searchByMostRecentAndAuthor($limit, $authorId) {
+  function searchByMostRecentAndAuthor($limit, $authorId) {
     $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
       "users.name as uname, users.id as uid, users.username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
@@ -548,7 +548,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function &searchForMostPopular($limit) {
+  function searchForMostPopular($limit) {
 	$db = BaseRecord::getDb();
 	$query = BASE_SEARCH_QUERY .
 	  "where recipes.submittedby = users.id order by visits desc";
@@ -556,7 +556,7 @@ class Recipe extends BaseRecord {
 	return Recipe::processResults($db, $res);
   }
 
-  function &searchForMostRecent($limit) {
+  function searchForMostRecent($limit) {
     $db = BaseRecord::getDb();
     $query = BASE_SEARCH_QUERY .
       "where recipes.submittedby = users.id order by recipes.createdate desc";
@@ -576,7 +576,7 @@ class Recipe extends BaseRecord {
     return ($this->getCookTime() + $this->getPrepTime());
   }
 
-  function &searchByTitle($title) {
+  function searchByTitle($title) {
     $db = BaseRecord::getDb();
     $title = $db->escapeSimple($title);
     $query = BASE_SEARCH_QUERY . " WHERE recipes.name like '$title%'" .
@@ -586,7 +586,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function &searchByKeyword($keyword) {
+  function searchByKeyword($keyword) {
     if(empty($keyword)) {
       return Recipe::searchByTitle($keyword);
     }
@@ -601,7 +601,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function &processResults($db, $res) {
+  function processResults($db, $res) {
     $resultSet = array();
     while ($res->fetchInto($row,  DB_FETCHMODE_ASSOC)) {
       $resultSet[] = new SearchResult($row['title'], buildViewUrl($row['recipeid']),
@@ -626,7 +626,7 @@ class Recipe extends BaseRecord {
     }
   }
 
-  function &searchByCategory($categoryId) {
+  function searchByCategory($categoryId) {
     $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title,recipes.description," .
       "users.name as uname, users.username as username, recipes.cached_rating, recipes.cached_ratinghits, recipetocategory.categoryid as categoryid," .
@@ -637,7 +637,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function &categoryList() {
+  function categoryList() {
     $foo = array();
     foreach($this->categories as $cat) {
       $foo[] = $cat->name;
@@ -645,7 +645,7 @@ class Recipe extends BaseRecord {
     return $foo;
   }
   
-  function &getRandomId() {
+  function getRandomId() {
     $db = BaseRecord::getDb();
     $query = "SELECT id FROM recipes ORDER BY RAND() LIMIT 1";
     $res = BaseRecord::runQuery($db,$query);
@@ -653,7 +653,7 @@ class Recipe extends BaseRecord {
     return $row['id'];
   }
   
-  function &getRecipeCount() {
+  function getRecipeCount() {
     $db = BaseRecord::getDb();
     $query = "SELECT count(id) number FROM recipes";
     $res = BaseRecord::runQuery($db,$query);

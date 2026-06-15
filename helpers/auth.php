@@ -172,16 +172,16 @@ function setUser(&$user) {
  * Returns the current user logged in.
  */
 
-function &getUser() {
+function getUser() {
   return $_SESSION['user'];
 }
 
-function &getActiveRecipe() {
+function getActiveRecipe() {
   return $_SESSION['recipe'];
 }
 
 function setActiveRecipe(&$recipe) {
-  $_SESSION['recipe'] &= $recipe;
+  $_SESSION['recipe'] = $recipe;
 }
 
 

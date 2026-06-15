@@ -38,7 +38,7 @@ class RecipeController extends BaseController {
    * Factory method that creates a recipe controller.
    * @static  
    */
-  function &newInstance() {
+  function newInstance() {
     $controller = new RecipeController("recipe");
 	$valid = array("author", "create", "create_comment", "delete", "delete", 
 				  "save", "edit", "add_picture", "remove_picture", "remove_pictures",
@@ -439,7 +439,7 @@ class RecipeController extends BaseController {
     $this->activateController("recipe", "results", "1");
   }
 
-  function &getRecipe($editable = false, $id = null) {
+  function getRecipe($editable = false, $id = null) {
     if(!empty($id)) {
       $recipe = Recipe::load($id);
     } else {

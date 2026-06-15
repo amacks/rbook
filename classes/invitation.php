@@ -34,14 +34,14 @@ require_once(dirname(__FILE__) . '/base_record.php');
 require_once(dirname(__FILE__) . "/category.php");
 
 class Invitation extends BaseRecord {
-  var $inviter;
-  var $invitee;
-  var $code;
-  var $acceptedDate;
-  var $createDate;
+  public $inviter;
+  public $invitee;
+  public $code;
+  public $acceptedDate;
+  public $createDate;
 
-  function Invitation($invited, $inviter) {
-    $this->BaseRecord();
+  function __construct($invited, $inviter) {
+    parent::__construct();
     $this->invitee = $invited;
     $this->inviter = $inviter;
     $this->code = md5(time());

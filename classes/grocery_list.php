@@ -31,12 +31,12 @@ class GroceryListFactory extends BaseRecordFactory {
 }
 
 class GroceryList extends BaseRecord {
-  var $description;
-  var $orderid;
-  var $userid;
+  public $description;
+  public $orderid;
+  public $userid;
 
-  function GroceryList() {
-    $this->BaseRecord();
+  function __construct() {
+    parent::__construct();
     $this->orderid = 0;
   }
 
@@ -71,9 +71,6 @@ class GroceryList extends BaseRecord {
   }
 
   function delete() {
-    if(!isset($this)){
-      return;
-    }
     GroceryList::deleteMultiple(array('id' => array($this->id)));
   }
 
@@ -89,12 +86,12 @@ class GroceryList extends BaseRecord {
    * Returns an array of users
    */
 
-  function &loadMultiple($qualifiers = null, $limit = null) {
+  function loadMultiple($qualifiers = null, $limit = null) {
     return BaseRecord::loadMultipleBasic(new GroceryListFactory(), $qualifiers, null, null);
   }
 
 
-  function &loadOne($qualifiers) {
+  function loadOne($qualifiers) {
     $users = User::loadMultiple($qualifiers, 1);
     if(count($users)) {
       return $users[0];

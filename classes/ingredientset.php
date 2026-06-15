@@ -29,12 +29,12 @@
 
 class IngredientSet extends BaseRecord {
 
-    var $name;
-    var $rows;
-    var $id;
+    public $name;
+    public $rows;
+    public $id;
 
-    function IngredientSet() {
-        $this->BaseRecord();
+    function __construct() {
+        parent::__construct();
         $this->name = "Ingredients";
         $this->rows = array();
         $this->id = "c" . microtime();

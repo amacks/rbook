@@ -35,7 +35,7 @@ class GuestbookController extends BaseController {
    * Factory method that creates a guestbook controller.  
    * @static
    */
-  function &newInstance() {
+  function newInstance() {
 	$controller = new GuestbookController();
   	$valid = array("index", "create_comment", "delete_comment");
     $auth = array("delete_comment");

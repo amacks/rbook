@@ -42,13 +42,13 @@ class GuestbookFactory extends BaseRecordFactory {
 }
 
 class Guestbook extends BaseRecord {
-  var $id;
-  var $name;
-  var $comment;
-  var $postdate;
+  public $id;
+  public $name;
+  public $comment;
+  public $postdate;
 
-  function Guestbook() {
-    $this->BaseRecord("guestbook");
+  function __construct() {
+    parent::__construct("guestbook");
   }
         
   function init(&$row) {
@@ -83,7 +83,7 @@ class Guestbook extends BaseRecord {
     }
   }
 
-  function &loadOne($qualifiers) {
+  function loadOne($qualifiers) {
     $guestbook = Guestbook::loadMultiple($qualifiers, 1);
     if(count($guestbook)) {
       return $guestbook[0];
@@ -95,7 +95,7 @@ class Guestbook extends BaseRecord {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "guestbook");
   }
 
-  function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new GuestbookFactory(), $qualifiers, $limit, $db, "postdate DESC");
   }
 

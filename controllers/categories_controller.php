@@ -37,8 +37,8 @@ require_once(dirname(__FILE__) . "/base_controller.php");
  */
 class CategoriesController extends BaseController {
 
-  function CategoriesController($name) {
-    $this->BaseController($name);
+  function __construct($name) {
+    parent::__construct($name);
   }
     
   /**
@@ -46,7 +46,7 @@ class CategoriesController extends BaseController {
    * @static
    */
 
-  function &newInstance() {
+  function newInstance() {
     $controller = new CategoriesController("categories");
     $controller->set_valid_actions(array("index", "add", "delete", 
                                          "show_replacements", 

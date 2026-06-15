@@ -47,7 +47,7 @@ class BaseController {
    * authentication
    */
 
-  var $requireAuth;
+  public $requireAuth;
 
   /**
    * @var string The name of the controller.  This is passed into the
@@ -57,14 +57,14 @@ class BaseController {
    * an error to be triggered.
    */
 
-  var $name;
+  public $name;
   
   /**
    * @var string the default action to call on the controller if
    * activateDefault() is called.  This is set to 'index' by default.
    */
 
-  var $defaultAction;
+  public $defaultAction;
 
   /**
    * @var bool true if all actions in the controller should be
@@ -72,10 +72,10 @@ class BaseController {
    * default.
    */
 
-  var $requiresSession;
+  public $requiresSession;
 
 
-  function BaseController($name = null, $requires_session = true) {
+  function __construct($name = null, $requires_session = true) {
     $this->name = $name;
     $this->defaultAction = "index";
 	$this->requiresSession = $requires_session;
@@ -241,7 +241,7 @@ class BaseController {
    * are need on all pages.
    */
   
-  function &prepareModelAndView() {
+  function prepareModelAndView() {
 	$smarty = new Smarty();
 	$smarty->register_resource('skin', 
 							   array("skin_get_template",
@@ -381,7 +381,7 @@ class BaseController {
    * all the categories defined in the system.
    */
   
-  function &buildCategoryList(&$categories) {
+  function buildCategoryList(&$categories) {
 	$cats = array();
 	foreach($categories as $cat) {
 		
@@ -411,7 +411,7 @@ class BaseController {
    * converted to html tags.
    */
   
-  function &buildDisplayableRecipe(&$recipe, $applyFormatting) {
+  function buildDisplayableRecipe(&$recipe, $applyFormatting) {
 	if($recipe == null) {
 	  return array();
 	}

@@ -42,16 +42,16 @@ class CommentFactory extends BaseRecordFactory {
 }
 
 class Comment extends BaseRecord {
-  var $recipeid;
-  var $userid;
-  var $createDate;
-  var $modifiedDate;
-  var $comment;
-  var $rating;
-  var $postDate;
+  public $recipeid;
+  public $userid;
+  public $createDate;
+  public $modifiedDate;
+  public $comment;
+  public $rating;
+  public $postDate;
 
-  function Comment() {
-    $this->BaseRecord("comments");
+  function __construct() {
+    parent::__construct("comments");
     $this->postDate = date("y-m-d H:i:s");
   }
         
@@ -83,11 +83,11 @@ class Comment extends BaseRecord {
       $db->disconnect();
     }
   }
-  function &findByRecipe($recipeid) {
+  function findByRecipe($recipeid) {
     return Comment::loadMultiple(array('recipeid' => $recipeid));
   }
 
-  function &loadOne($qualifiers) {
+  function loadOne($qualifiers) {
     $comments = Comment::loadMultiple($qualifiers, 1);
     if(count($comments)) {
       return $comments[0];
@@ -99,7 +99,7 @@ class Comment extends BaseRecord {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "comments");
   }
 
-  function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new CommentFactory(), $qualifiers, $limit, $db);
   }
 

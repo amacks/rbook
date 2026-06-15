@@ -29,12 +29,12 @@
  */
 
 class Exporter extends BaseRecord {
-  var $con;
-  var $fh;
-  var $db;
-  var $numRecipes;
-  var $numCategories;
-  var $numUsers;
+  public $con;
+  public $fh;
+  public $db;
+  public $numRecipes;
+  public $numCategories;
+  public $numUsers;
 
   function setUp() {
     $this->db = $this->getDb();

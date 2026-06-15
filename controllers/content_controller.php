@@ -35,7 +35,7 @@ class ContentController extends BaseController {
    @static  
  */
 
-  function &newInstance() {
+  function newInstance() {
 	$controller = new ContentController();
 	$controller->set_valid_actions(array("topic"));
 	return $controller;

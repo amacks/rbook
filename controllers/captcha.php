@@ -21,7 +21,7 @@
 
 class Captcha {
   
-  function Captcha() {
+  function __construct() {
   }
 
   function generateText() {

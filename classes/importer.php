@@ -31,27 +31,27 @@ require_once(dirname(__FILE__) . "/mine.php");
 require_once(dirname(__FILE__) . "/invitation.php");
 
 class Importer extends BaseRecord {
-  var $categories;
-  var $users;
-  var $recipe;
-  var $step;
-  var $onstep;
-  var $iset;
-  var $counter;
-  var $iCounter;
-  var $description;
-  var $ondescription;
-  var $note;
-  var $onnote;
-  var $recipes;
-  var $recipeId;
-  var $oncomment;
-  var $comment;
-  var $commentsOn;
-  var $onguestbook;
-  var $guestbookentry;
+  public $categories;
+  public $users;
+  public $recipe;
+  public $step;
+  public $onstep;
+  public $iset;
+  public $counter;
+  public $iCounter;
+  public $description;
+  public $ondescription;
+  public $note;
+  public $onnote;
+  public $recipes;
+  public $recipeId;
+  public $oncomment;
+  public $comment;
+  public $commentsOn;
+  public $onguestbook;
+  public $guestbookentry;
   
-  function Importer() {
+  function __construct() {
     $this->recipes = array();
     $this->categories = array();
     $this->users = array();
@@ -59,7 +59,7 @@ class Importer extends BaseRecord {
 	$this->commentsOn = array();
   }
   
-  function &listImportFiles() {
+  function listImportFiles() {
     $importFiles = array();
     if(!is_dir(IMPORTDIR)) {
       return $importFiles;

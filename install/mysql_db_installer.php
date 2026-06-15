@@ -28,8 +28,8 @@
 
 class MysqlDBInstaller extends DBInstaller {
   
-  function MysqlDBInstaller() {
-    $this->DBInstaller();
+  function __construct() {
+    parent::__construct();
   }
   
   function createDatabase() {

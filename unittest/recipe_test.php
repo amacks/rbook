@@ -7,7 +7,7 @@ require_once(dirname(__FILE__) . '/../classes/base_record.php');
 require_once(dirname(__FILE__) . '/../classes/recipe.php');
 
 class RecipeTest extends BaseDBTest {
-	function RecipeTest($name) {
+	function __construct($name) {
 		$this->BaseDBTest($name);
 	}
 
@@ -23,7 +23,7 @@ class RecipeTest extends BaseDBTest {
 
 	}
 
-	function &createFooRecipe() {
+	function createFooRecipe() {
 		$r = new Recipe();
 		$r->title = "foo";
 		$r->categoryId = 1;

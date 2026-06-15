@@ -37,7 +37,7 @@ class UserController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function &newInstance() {
+  function newInstance() {
     $controller = new UserController("user");
     $actions = array("validate", "respond", "invite", "process_invite", "retrieve_password", 
                      "forgot","show_login", "edit_profile", "view_profile", "save_profile", 
@@ -358,9 +358,10 @@ class UserController extends BaseController {
     }
 
     if($theUser->validateLogin($_POST['password'])) {
-      $_SESSION['user'] =& $theUser;
+      $theUser->upgradePasswordHashIfNeeded($_POST['password']);
+      $_SESSION['user'] = $theUser;
       if($_POST['saveid'] == 'on') {
-        $token = md5(date("Y-m-d h:i:s"));
+        $token = bin2hex(random_bytes(16));
         setcookie('saveid', $theUser->id, time() + 2592000, APPROOT);
         setcookie('auth',$token, time() + 2592000, APPROOT);
         $theUser->auth = $token;
@@ -373,7 +374,7 @@ class UserController extends BaseController {
     $this->activateController("user", "show_login");
   }
 
-  function &buildUserList(&$uList) {
+  function buildUserList(&$uList) {
     $users = array();
     foreach($uList as $u) {
       $ua = array("name" => $u->name,

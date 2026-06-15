@@ -7,8 +7,8 @@ require_once('../classes/base_record.php');
 require_once('../classes/category.php');
 
 class CategoryTest extends BaseDBTest {
-	var $installer;
-	function UserTest($name) {
+	public $installer;
+	function __construct($name) {
 		$this->PHPUnit_TestCase($name);
 	}
 	function testCreate() {

@@ -42,14 +42,14 @@ require_once(dirname(__FILE__) . "/user_controller.php");
 
 class ExporterController extends BaseController {
 
-  function ExporterController($name) {
-    $this->BaseController($name);
+  function __construct($name) {
+    parent::__construct($name);
   }
   /**
    * Factory method that creates a user controller.  
    */
 
-  function &newInstance() {
+  function newInstance() {
     $controller = new ExporterController("exporter");
     $controller->set_requires_adminaccess(array("index", "import", "show_exporter", "export", "download_export", "show_results"));
     return $controller;

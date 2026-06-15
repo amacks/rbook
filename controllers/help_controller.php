@@ -35,7 +35,7 @@ class HelpController extends BaseController {
    * Factory method that creates a help page controller.  
    * @static
    */
-  function &newInstance() {
+  function newInstance() {
 	$controller = new HelpController();
   	$valid = array("index", "create_plugin");
     $auth = array("create_plugin");

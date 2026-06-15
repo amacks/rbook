@@ -50,11 +50,11 @@ class CategoryFactory extends BaseRecordFactory {
  */
 
 class Category extends BaseRecord {
-  var $name;
-  var $recipeCount;
+  public $name;
+  public $recipeCount;
 
-  function Category() {
-    $this->BaseRecord();
+  function __construct() {
+    parent::__construct();
   }
 
   function init($row) {
@@ -89,7 +89,7 @@ class Category extends BaseRecord {
    * passed in the $notIn parameter.
    */
 
-  function &loadCategoriesNotIn(&$notIn) {
+  function loadCategoriesNotIn(&$notIn) {
     $questions = array();
     for($i = 0; $i < count($notIn); $i++) {
       $questions[] = "?";
@@ -108,7 +108,7 @@ class Category extends BaseRecord {
    * Returns a collection of all categories.
    */
 
-  function &loadAllCategories() {
+  function loadAllCategories() {
     $db = BaseRecord::getDb();
     $results = BaseRecord::runQuery($db, "select * from categories");
                                     
@@ -117,7 +117,7 @@ class Category extends BaseRecord {
     return $cats;
   }
 
-  function &processResults($results) {
+  function processResults($results) {
     $categories = array();
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $cat = new Category();
@@ -142,7 +142,7 @@ class Category extends BaseRecord {
    * @param limit a limit on the number of results to pass in (or null for no limit).
    */
 
-	function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+	function loadMultiple($qualifiers = null, $limit = null, $db = null) {
 		if(!isset($db)) {
 			$db = BaseRecord::getDb();
 		}

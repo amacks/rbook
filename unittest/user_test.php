@@ -7,8 +7,8 @@ require_once('../classes/base_record.php');
 require_once('../classes/user.php');
 
 class UserTest extends BaseDBTest {
-	var $installer;
-	function UserTest($name) {
+	public $installer;
+	function __construct($name) {
 		$this->BaseDBTest($name);
 	}
 
@@ -69,7 +69,7 @@ class UserTest extends BaseDBTest {
 	}
 
 
-	function &createFooUser() {
+	function createFooUser() {
 		$user = new User();
 		$this->assertTrue($user->id == -1);
 		$user->name = "foo";

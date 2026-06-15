@@ -21,10 +21,10 @@
  */
 
 class Tag extends Token {
-  var $name;
-  var $begin;
-  var $both;
-  function Tag($name, $begin, $both, $paramlist) {
+  public $name;
+  public $begin;
+  public $both;
+  function __construct($name, $begin, $both, $paramlist) {
     $this->name = $name;
     $this->begin = $begin;
     $this->both = $both;

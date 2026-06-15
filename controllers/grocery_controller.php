@@ -36,7 +36,7 @@ class GroceryController extends BaseController {
    * Factory method that creates an image controller.  
    */
 
-  function &newInstance() {
+  function newInstance() {
 	$controller = new GroceryController("grocery");
 	$controller->set_valid_actions(array("clear", "save", "update", "remove", "index", "save_in_place"));
 	$controller->set_requires_authentication(array("clear", "save", "save_in_place", "update", "remove", "index"));

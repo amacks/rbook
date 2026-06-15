@@ -103,3 +103,10 @@ DROP TABLE IF EXISTS `ingredientsets_seq`;
 DROP TABLE IF EXISTS `recipes_seq`;
 DROP TABLE IF EXISTS `steps_seq`;
 DROP TABLE IF EXISTS `users_seq`;
+
+-- ============================================================
+-- Migration: Widen password column for bcrypt hashes
+-- bcrypt hashes produced by password_hash() are 60 characters;
+-- the original schema defined the column as char(33) (for md5).
+-- ============================================================
+ALTER TABLE `users` MODIFY `password` varchar(255) NOT NULL;

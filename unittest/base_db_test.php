@@ -5,9 +5,9 @@ require_once('../install/mysql_db_installer.php');
 require_once(dirname(__FILE__) . "/../classes/recipe.php");
 class BaseDBTest extends PHPUnit_TestCase {
 
-	var $installer;
+	public $installer;
 
-	function BaseDBTest($name) {
+	function __construct($name) {
 		$this->PHPUnit_TestCase($name);
 	}
 

@@ -42,19 +42,19 @@ class ImageFactory extends BaseRecordFactory {
 }
 
 class Image extends BaseRecord {
-  var $recipeid;
-  var $caption;
-  var $width;
-  var $height;
-  var $submittedBy;
-  var $createDate;
-  var $type;
-  var $recipeuid;
-  var $uid;
-  var $id;
+  public $recipeid;
+  public $caption;
+  public $width;
+  public $height;
+  public $submittedBy;
+  public $createDate;
+  public $type;
+  public $recipeuid;
+  public $uid;
+  public $id;
 
-  function Image() {
-    $this->BaseRecord("images");
+  function __construct() {
+    parent::__construct("images");
     $this->uid = $this->createUid();
   }
         
@@ -82,7 +82,7 @@ class Image extends BaseRecord {
     }
   }
 
-  function &findForRecipe($recipeid, $limit = null, $db = null) {
+  function findForRecipe($recipeid, $limit = null, $db = null) {
     if(!isset($db)) {
       $db = BaseRecord::getDb();
     }
@@ -186,7 +186,7 @@ class Image extends BaseRecord {
     }
 	}
   
-  function &load($id, $db = null) {
+  function load($id, $db = null) {
     $cascade = isset($db);
 	if (!isset($db)) {
 	    $db = BaseRecord::getDb();
@@ -203,7 +203,7 @@ class Image extends BaseRecord {
     return $img;
   }
 
-  function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new ImageFactory(), $qualifiers, $limit, $db);
   }
 

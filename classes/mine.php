@@ -29,10 +29,10 @@
 
 
 class Mine extends BaseRecord {
-  var $userid;
-  var $recipeid;
-  function Mine() {
-    $this->BaseRecord();
+  public $userid;
+  public $recipeid;
+  function __construct() {
+    parent::__construct();
   }
 
   function save() {

@@ -49,26 +49,26 @@ if(!defined("SKIN")) define("SKIN", "default");
 if(!defined("LANGUAGE")) define("LANGUAGE", "en");
 
 class DBInstaller {
-  var $databaseName;
-  var $action;
-  var $databaseHost;
-  var $adminUser;
-  var $password;
-  var $create;
-  var $initialUser;
-  var $initialEmail;
-  var $errors;
-  var $exists;
-  var $dbUserName;
-  var $approot;
-  var $config;
-  var $viewPolicy;
-  var $maxInvitations;
-  var $exportDirectory;
-  var $buildDatabase;
-  var $language;
+  public $databaseName;
+  public $action;
+  public $databaseHost;
+  public $adminUser;
+  public $password;
+  public $create;
+  public $initialUser;
+  public $initialEmail;
+  public $errors;
+  public $exists;
+  public $dbUserName;
+  public $approot;
+  public $config;
+  public $viewPolicy;
+  public $maxInvitations;
+  public $exportDirectory;
+  public $buildDatabase;
+  public $language;
 
-  function DBInstaller() {
+  function __construct() {
     $this->databaseName = DBNAME;
     $this->action = DBACTION;
     $this->adminUser = "root";
@@ -152,7 +152,7 @@ class DBInstaller {
     return "mysql://" . $this->adminUser . ":" . $this->password . "@" . $this->databaseHost . "/" . $this->databaseName;
   }
 
-  function &getDb() {
+  function getDb() {
 
     $con =& DB::connect($this->getDbUrl());
     if(PEAR::isError($con)) {
@@ -230,7 +230,7 @@ class DBInstaller {
     }
   }
 
-  function &runQuery(&$db, $query, $params = null, $file = null, $line = null) {
+  function runQuery(&$db, $query, $params = null, $file = null, $line = null) {
     if(isset($params)) {
       $res =& $db->query($query, $params);
     } else {

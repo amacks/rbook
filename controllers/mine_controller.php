@@ -37,7 +37,7 @@ class MineController extends BaseController {
    * Factory method that creates a myrecipes controller.  
    */
 
-  function &newInstance() {
+  function newInstance() {
 	$controller = new MineController("mine");
 	$controller->set_valid_actions(array("index", "take", "delete", "results"));
 	$controller->set_requires_authentication(array("index", "take", "delete", "results"));

@@ -34,7 +34,7 @@ class AdminController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  static function &newInstance() {
+  static function newInstance() {
 	$controller = new AdminController();
 	$controller->set_valid_actions(array("index"));
 	$controller->set_requires_adminaccess(array("index"));

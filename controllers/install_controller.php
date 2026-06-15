@@ -35,7 +35,7 @@ class InstallController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function &newInstance() {
+  function newInstance() {
 	$controller = new InstallController();
 	$controller->set_valid_actions(array("index"));
 	return $controller;

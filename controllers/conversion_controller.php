@@ -36,7 +36,7 @@ class ConversionController extends BaseController {
    * @static
    */
 
-  function &newInstance() {
+  function newInstance() {
     $controller = new ConversionController();
     $controller->set_valid_actions(array("index"));
     return $controller;

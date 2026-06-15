@@ -39,13 +39,9 @@ require_once(dirname(__FILE__) . '/../config.php');
  * @version $Id: base_record.php,v 1.8 2006/11/10 01:58:42 aviolette Exp $
  */
 
-class BaseRecordFactory {
-  function createInstance() {
-    die("Implement in subclass");
-  }
-  function getTable() {
-    die("Implement in subclass");
-  }
+abstract class BaseRecordFactory {
+  abstract public function createInstance();
+  abstract public function getTable(): string;
 }
 
 /**
@@ -66,16 +62,16 @@ class BaseRecord {
    * The ID of the database record.
    */
 
-  var $id;
+  public $id;
 
-  var $requiresValues;
+  public $requiresValues;
 
   /**
    * Constructs a base record.
    * @param tableName the table name associated with this record.
    */
   
-  function BaseRecord($tableName = null) {
+  function __construct($tableName = null) {
     $this->id = -1;
     $this->tableName = $tableName;
   }
@@ -208,7 +204,7 @@ class BaseRecord {
     }
     return $whereClause;
   }
-  function &prepareQualifiers(&$qualifiers) {
+  function prepareQualifiers(&$qualifiers) {
     if(!isset($qualifiers)) {
 	  $foo = array();
 	  return $foo;
@@ -261,7 +257,7 @@ class BaseRecord {
 	$this->requiresValues = $values;
   }
   
-  function &validate() {
+  function validate() {
 	$foo = array();
 	if(isset($this->requiresValues)) {
 	  $vars = get_object_vars($this);

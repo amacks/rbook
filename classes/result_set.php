@@ -33,20 +33,20 @@
 
 
 class ResultSet {
-  var $resultsPerPage;
-  var $results;
-  var $page;
-  var $name;
-  var $displayResultCount;
-  var $nextPage;
-  var $fromPage;
+  public $resultsPerPage;
+  public $results;
+  public $page;
+  public $name;
+  public $displayResultCount;
+  public $nextPage;
+  public $fromPage;
   /** 
    * Constructs a result set
    * resultsPerPage - the number of results to display on a page
    * results - the search results, which is an array of objects
    */
 
-  function ResultSet($resultsPerPage, $results) {
+  function __construct($resultsPerPage, $results) {
     $this->resultsPerPage = $resultsPerPage;
     $this->results = $results;
     $this->page = 1;
