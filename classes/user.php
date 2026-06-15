@@ -200,6 +200,9 @@ class User extends BaseRecord {
 
   function validateLogin($password) {
     // Support legacy md5 hashes stored before the PHP8 upgrade.
+    error_log($password);
+    error_log($this->password);
+    error_log(password_verify($password, $this->password));
     if (password_verify($password, $this->password)) {
       return true;
     }
