@@ -427,14 +427,15 @@ class RecipeController extends BaseController {
 
   function search() {
     unset($_SESSION['results']);
-    $results = Recipe::searchByKeyword($_GET['search']);
+    $searchTerm = $_GET['search'] ?? '';
+    $results = Recipe::searchByKeyword($searchTerm);
     if(isset($results) && count($results) == 1 && (DISPLAYIFONLYONE === true)) {
       $this->activateController("recipe", "view", $results[0]->recipeId);
     }
     $rset = new ResultSet(RESULTS_PER_PAGE, $results);
     $_SESSION['results'] = $rset;
 	$rset->fromPage = 'search';
-	$rset->name = $_GET['search'];
+	$rset->name = $searchTerm;
     $rset->displayResultCount = false;
     $this->activateController("recipe", "results", "1");
   }
