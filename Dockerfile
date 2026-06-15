@@ -39,7 +39,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Copy the rest of the application
-COPY . .
+COPY . rbook
 
 # Remove the default Apache vhost and install ours
 RUN rm -f /etc/apache2/sites-enabled/000-default.conf
