@@ -49,7 +49,7 @@ class Invitation extends BaseRecord {
     $this->acceptedDate = null;
   }
 
-  function save() {
+  function save($db = null) {
     if(isset($this->createDate)) {
       $this->dbUpdate();
     } else {

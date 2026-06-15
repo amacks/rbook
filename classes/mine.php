@@ -35,8 +35,7 @@ class Mine extends BaseRecord {
     parent::__construct();
   }
 
-  function save() {
-    $db = $this->getDb();
+  function save($db = null) {
     $this->runQuery($db, "insert into mine (userid, recipeid) values (?, ?)", array($this->userid, $this->recipeid));
 
     $db->commit();
