@@ -33,15 +33,17 @@ WORKDIR /var/www/html
 
 RUN mkdir rbook
 
+WORKDIR /var/www/html/rbook
+
 # Copy dependency manifests first so Docker layer cache isn't busted
 # by unrelated source changes
 COPY composer.json composer.lock ./
 
 # Install PHP dependencies (production — no dev packages)
-RUN composer install --no-dev --optimize-autoloader --no-interaction -d rbook
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Copy the rest of the application
-COPY . rbook
+COPY . .
 
 # Remove the default Apache vhost and install ours
 RUN rm -f /etc/apache2/sites-enabled/000-default.conf
