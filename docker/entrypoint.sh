@@ -41,6 +41,10 @@ DEBUG="${DEBUG:-false}"
 
 CONFIG=/var/www/html/rbook/config.php
 
+if [ -f "$CONFIG" ]; then
+    echo "rbook: config.php already exists — skipping generation"
+else
+
 cat > "$CONFIG" <<PHP
 <?php
 if (!defined("DBHOST"))            define("DBHOST",       "${DBHOST}");
@@ -72,6 +76,8 @@ fi
 
 echo "?>" >> "$CONFIG"
 echo "rbook: config.php generated from environment variables"
+
+fi  # end config.php generation
 
 # Ensure the Smarty compile cache directory exists and is writable
 TEMPLATES_C="/var/www/html/rbook/skins/${SKIN}/templates_c"
