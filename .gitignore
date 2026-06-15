@@ -1,0 +1,4 @@
+vendor/
+composer.phar
+skins/*/templates_c/
+.idea/

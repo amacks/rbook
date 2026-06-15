@@ -110,7 +110,7 @@ class BaseController {
 
   function activateDefault() {
     if(empty($this->defaultAction)) {
-      trigger_errror("No default action specified for controller", E_USER_ERROR);
+      trigger_error("No default action specified for controller", E_USER_ERROR);
     }
     $this->activateAction($this->defaultAction);
   }
@@ -243,22 +243,17 @@ class BaseController {
   
   function prepareModelAndView() {
 	$smarty = new Smarty();
-	$smarty->register_resource('skin', 
-							   array("skin_get_template",
-									 "skin_get_timestamp",
-									 "skin_is_secure",
-									 "skin_is_trusted"));
-	$smarty->compile_check = true;
+	$smarty->registerResource('skin', new SkinResource());
+	$smarty->setCompileCheck(true);
 	$smarty->assign("appTitle", APPTITLE);
 	$smarty->debugging = false;
-	$smarty->config_dir = SKINDIR . '/configs';
-	
-	$smarty->template_dir = getTemplateDir();
-	$smarty->compile_dir = SKINDIR . '/templates_c';
-	if(!file_exists($smarty->compile_dir)) {
-	  mkdir($smarty->compile_dir);
+	$smarty->setConfigDir(SKINDIR . '/configs');
+	$smarty->setTemplateDir(getTemplateDir());
+	$smarty->setCompileDir(SKINDIR . '/templates_c');
+	if(!file_exists(SKINDIR . '/templates_c')) {
+	  mkdir(SKINDIR . '/templates_c');
 	}
-	$smarty->plugin_dir = ROOT_DIRECTORY . '/plugins';
+	$smarty->addPluginsDir(ROOT_DIRECTORY . '/plugins');
 	$smarty->assign("controller", $this->name);
 	$smarty->assign("action", $this->currentAction);
 	$smarty->assign("showrss", "false");
@@ -269,7 +264,7 @@ class BaseController {
 	  $categories = $_SESSION['categories'];
 	}
 	if(!isset($categories)) {
-	  $categories =& Category::loadMultiple(null, null);
+	  $categories = Category::loadMultiple(null, null);
 	  $_SESSION['categories'] = $categories;
 	} 
 	$smarty->assign("categories", $this->buildCategoryList($categories));
@@ -277,7 +272,7 @@ class BaseController {
 	  $recipecount = $_SESSION['recipecount'];
 	}
 	if(!isset($recipecount)) {
-	  $recipecount =& Recipe::getRecipeCount();
+	  $recipecount = Recipe::getRecipeCount();
 	  $_SESSION['recipecount'] = $recipecount;
 	} 
 	$smarty->assign("recipecount", $recipecount);
@@ -464,7 +459,7 @@ class BaseController {
 			   );
 			   
 	// Multiple images possible.
-	$imgs =& $recipe->images;
+	$imgs = $recipe->images;
 	if(isset($imgs) && count($imgs) > 0) {
 	  $images = array();
 	  for($i = 0; $i < count($imgs); $i++) {

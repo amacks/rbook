@@ -35,19 +35,20 @@
  * @return string|null
  */
 
-function smarty_block_getParameterizedMessage($params, $content, &$smarty, &$repeat) {
+function smarty_block_getParameterizedMessage($params, $content, $template, &$repeat) {
+  global $rbook_param_array;
   if(is_null($content)) {
-	$smarty->paramArray = array();
+	$rbook_param_array = array();
 	return;
   }
   
   $bar = getMessage($params['key']);
   $patterns = array();
-  for($i =0; $i < count($smarty->paramArray); $i++) {
+  for($i = 0; $i < count($rbook_param_array); $i++) {
 	$foo = '/\{' . $i . '\}/';
 	$patterns[] = $foo;
   }
-  $bar = preg_replace($patterns, $smarty->paramArray , $bar);
+  $bar = preg_replace($patterns, $rbook_param_array, $bar);
   return $bar;
 }
 ?>

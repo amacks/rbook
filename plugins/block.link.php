@@ -31,7 +31,7 @@
  * @subpackage plugins
  */
 
-function smarty_block_link($params, $content, &$smarty, &$repeat) {
+function smarty_block_link($params, $content, $template, &$repeat) {
   if(is_null($content)) {
 	$link = "<a href=\"". buildLink($params['controller'], $params['action'], $params['arg']) . "\"";
 	if(!empty($params['class_name'])) {
