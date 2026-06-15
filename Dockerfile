@@ -36,7 +36,7 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 
 # Install PHP dependencies (production — no dev packages)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction -d rbook
 
 # Copy the rest of the application
 COPY . rbook
