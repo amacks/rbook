@@ -31,6 +31,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # ---------------------------------------------------------------------------
 WORKDIR /var/www/html
 
+RUN mkdir rbook
+
 # Copy dependency manifests first so Docker layer cache isn't busted
 # by unrelated source changes
 COPY composer.json composer.lock ./
