@@ -1,39 +1,31 @@
 <?php
-require_once('PHPUnit.php');
-require_once('base_db_test.php');
-require_once('../install/db_installer.php');
-require_once('../install/mysql_db_installer.php');
-require_once('../classes/base_record.php');
-require_once('../classes/user.php');
+require_once(dirname(__FILE__) . '/BaseDBTest.php');
+require_once(dirname(__FILE__) . '/../install/db_installer.php');
+require_once(dirname(__FILE__) . '/../install/mysql_db_installer.php');
+require_once(dirname(__FILE__) . '/../classes/base_record.php');
+require_once(dirname(__FILE__) . '/../classes/user.php');
 
 class UserTest extends BaseDBTest {
-	public $installer;
-	function __construct($name) {
-		$this->BaseDBTest($name);
-	}
 
 	function testUpdatePassword() {
 		$users = User::loadMultiple();
 		$this->assertEquals(1, count($users));
 		$users[0]->updatePassword("newpassword");
-		
+
 		$users = User::loadMultiple();
 		$this->assertEquals(1, count($users));
-		$this->assertEquals(md5("newpassword"), $users[0]->password);
+		$this->assertTrue(password_verify("newpassword", $users[0]->password));
 	}
 
 	function testUpdate() {
-
 		$users = User::loadMultiple();
 		$this->assertEquals(1, count($users));
-		$id = $users[0]->id;
 		$fu = "a123456";
 		$users[0]->name = $fu;
 		$users[0]->save();
-		
+
 		$user = User::loadOne(array('id' => 1));
 		$this->assertNotNull($user);
-		
 		$this->assertEquals($user->name, $fu);
 	}
 
@@ -50,7 +42,7 @@ class UserTest extends BaseDBTest {
 	}
 
 	function testDeleteUser() {
-		$user =& $this->createFooUser();
+		$user = $this->createFooUser();
 		$this->assertEquals(-1, $user->id);
 		$user->save();
 		$id = $user->id;
@@ -63,11 +55,8 @@ class UserTest extends BaseDBTest {
 		$user = User::loadOne(array('id' => $id));
 		$this->assertTrue(empty($user));
 		$users = User::loadMultiple();
-		// contains the original user
 		$this->assertTrue(count($users) > 0);
-
 	}
-
 
 	function createFooUser() {
 		$user = new User();
@@ -84,14 +73,8 @@ class UserTest extends BaseDBTest {
 	function testLoadMultiple() {
 		$users = User::loadMultiple();
 		$this->assertTrue(count($users) == 1);
-		
+
 		$users = User::loadMultiple(array('id' => 2));
 		$this->assertTrue(count($users) == 0);
-
-		
-
 	}
 }
-
-
-?>

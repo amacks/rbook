@@ -33,22 +33,18 @@ class MysqlDBInstaller extends DBInstaller {
   }
   
   function createDatabase() {
-	
-    $con = @mysql_connect($this->databaseHost, $this->adminUser, $this->password);
-    if(!$con) {
-      $this->errors[] = mysql_error();
-      return;
-    }
-    
-    $this->exists = true;
-    if($this->action == "fresh") {
-      mysql_query("DROP DATABASE IF EXISTS " . $this->databaseName);
-      mysql_query("CREATE DATABASE " . $this->databaseName , $con);
-      $error = mysql_error();
-      if(!empty($error)) {
-        $this->errors[] = $error;
-        return;
+    try {
+      $dsn = "mysql:host={$this->databaseHost};charset=utf8";
+      $pdo = new PDO($dsn, $this->adminUser, $this->password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      ]);
+      $this->exists = true;
+      if($this->action == "fresh") {
+        $pdo->exec("DROP DATABASE IF EXISTS `{$this->databaseName}`");
+        $pdo->exec("CREATE DATABASE `{$this->databaseName}`");
       }
+    } catch (PDOException $e) {
+      $this->errors[] = $e->getMessage();
     }
   }
 }

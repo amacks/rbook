@@ -21,11 +21,11 @@
 
 require_once(dirname(__FILE__) . '/base_record.php');
 class GroceryListFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new GroceryList();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "groceryitems";
   }
 }

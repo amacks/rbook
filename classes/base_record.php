@@ -28,7 +28,9 @@
  */
 
 /** */
-require_once(dirname(__FILE__) . '/../config.php');
+if(file_exists(dirname(__FILE__) . '/../config.php')) {
+  require_once(dirname(__FILE__) . '/../config.php');
+}
 
 /**
  * Interface for factory used to create subclasses of BaseRecord.

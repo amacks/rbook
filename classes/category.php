@@ -31,10 +31,10 @@ require_once(dirname(__FILE__) . '/base_record.php');
  */
 
 class CategoryFactory extends BaseRecordFactory {
-    function createInstance() {
+    function createInstance(): mixed {
         return new Category();
     }
-    function getTable() {
+    function getTable(): string {
         return "categories";
     }
 }

@@ -32,11 +32,11 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class CommentFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new Comment();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "comments";
   }
 }

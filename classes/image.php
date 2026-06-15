@@ -32,11 +32,11 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class ImageFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new Image();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "images";
   }
 }

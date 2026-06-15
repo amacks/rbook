@@ -26,12 +26,10 @@
  * @since 0.9
  * @version $Id: db_installer.php,v 1.18 2007/04/07 01:45:00 aviolette Exp $
  */
-require_once('DB.php');
+require_once(dirname(__FILE__) . "/../const.php");
 
-require_once("../const.php");
-
-if(file_exists('../config.php')) {
-  include('../config.php');
+if(file_exists(dirname(__FILE__) . '/../config.php')) {
+  include(dirname(__FILE__) . '/../config.php');
   define("DBACTION", "fresh");
 } else {
   define("DBACTION", "fresh");
@@ -134,12 +132,7 @@ class DBInstaller {
     $this->dbUserName = $postValues['databaseUserName'];
     $this->approot = $postValues['approot'];
     $this->skin = $postValues['skin'];
-    // Check if quoting is enabled and remove escape characters from the apptitle
-	if(get_magic_quotes_gpc()) {
-        $this->title = stripslashes($postValues['title']);
-    } else {
-		$this->title = $postValues['title'];
-	}	
+    $this->title = $postValues['title'];
     $this->viewPolicy = $postValues['viewPolicy'];
     $this->maxInvitations = $postValues['maxInvitations'];
     $this->exportDirectory = $postValues['exportDirectory'];
@@ -148,25 +141,28 @@ class DBInstaller {
 	$this->language = $postValues['language'];
   }
 
-  function getDbUrl() {
-    return "mysql://" . $this->adminUser . ":" . $this->password . "@" . $this->databaseHost . "/" . $this->databaseName;
-  }
-
   function getDb() {
-
-    $con =& DB::connect($this->getDbUrl());
-    if(PEAR::isError($con)) {
-	  trigger_error("Couldn't connect to database");
-	  return null;
+    $dsn = "mysql:host={$this->databaseHost};dbname={$this->databaseName};charset=utf8";
+    try {
+      $pdo = new PDO($dsn, $this->adminUser, $this->password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      ]);
+      return $pdo;
+    } catch (PDOException $e) {
+      trigger_error("Couldn't connect to database: " . $e->getMessage());
+      return null;
     }
-    return $con;
   }
 
   function uninstall() {
-    $db =& $this->getDb();
-    $res =& $db->query("drop database " . $this->databaseName);
-    if(PEAR::isError($res)) {
-      $this->logError($res->getMessage(), __FILE__, __LINE__);
+    try {
+      $dsn = "mysql:host={$this->databaseHost};charset=utf8";
+      $pdo = new PDO($dsn, $this->adminUser, $this->password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      ]);
+      $pdo->exec("DROP DATABASE IF EXISTS `{$this->databaseName}`");
+    } catch (PDOException $e) {
+      $this->logError($e->getMessage(), __FILE__, __LINE__);
     }
   }
 
@@ -204,10 +200,10 @@ class DBInstaller {
     $this->createCommentTable($db);
 	$this->createGuestbookTable($db);
     $this->populateCategories($db);
-    $db->disconnect();
+    $db = null;
   }
 
-  function createDatabaseUser(&$db) {
+  function createDatabaseUser($db) {
     if(empty($this->dbUserName)) {
       return;
     }
@@ -218,49 +214,45 @@ class DBInstaller {
             "'@'" . $this->databaseHost . "' = PASSWORD('" . $this->password . "')");
   }
 
-  function populateCategories(&$db) {
+  function populateCategories($db) {
     $categories = array(getMessage('Cat01'), getMessage('Cat02'), getMessage('Cat03'),
 						getMessage('Cat04'), getMessage('Cat05'), getMessage('Cat06'),
 						getMessage('Cat07'), getMessage('Cat08'), getMessage('Cat09'), 
                         getMessage('Cat10'));
-    for($i =0; $i < count($categories); $i++) {
-      $id = $db->nextId("categories");
-      $this->runQuery($db,"insert into categories (id, name) values (?, ?)",
-              array($id, $categories[$i]), __FILE__, __LINE__);
+    for($i = 0; $i < count($categories); $i++) {
+      $this->runQuery($db, "insert into categories (name) values (?)",
+              array($categories[$i]), __FILE__, __LINE__);
     }
   }
 
-  function runQuery(&$db, $query, $params = null, $file = null, $line = null) {
-    if(isset($params)) {
-      $res =& $db->query($query, $params);
-    } else {
-      $res =& $db->query($query);
-    }
-    if(PEAR::isError($res)) {
+  function runQuery($db, $query, $params = null, $file = null, $line = null) {
+    try {
+      if(isset($params)) {
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
+        return $stmt;
+      } else {
+        $db->exec($query);
+        return true;
+      }
+    } catch (PDOException $e) {
       $file = empty($file) ? "" : $file;
       $line = empty($line) ? "" : $line;
-      $this->logError($res->getMessage(), $file, $line);
-      die($file . "," . $line . "," . $query . "," . $res->getMessage());
-    }
-    return $res;
-
-  }
-
-
-
-  function createInitialUser(&$db) {
-
-    $id = $db->nextId("users");
-	$params = array($id, $this->initialEmail, 'root', md5('password'), $this->initialUser);
-    $res =& $db->query("insert into users (id, email, username, password, name, readonly, admin) values (?, ?, ?, ?, ?, 0, 1)",
-               $params);
-
-    if(PEAR::isError($res)) {
-      $this->logError($res->getDebugInfo(), __FILE__, __LINE__);
+      $this->logError($e->getMessage(), $file, $line);
+      die($file . "," . $line . "," . $query . "," . $e->getMessage());
     }
   }
 
-  function createMineTable(&$db) {
+
+
+  function createInitialUser($db) {
+    $params = array($this->initialEmail, 'root', password_hash('password', PASSWORD_DEFAULT), $this->initialUser);
+    $this->runQuery($db,
+      "insert into users (email, username, password, name, readonly, admin) values (?, ?, ?, ?, 0, 1)",
+      $params, __FILE__, __LINE__);
+  }
+
+  function createMineTable($db) {
     $this->dropTable($db, "mine");
     $this->runQuery($db,
                     "create table if not exists mine (" .
@@ -275,7 +267,7 @@ class DBInstaller {
                     ") ENGINE = INNODB");
   }
 
-  function createInvitationTable(&$db) {
+  function createInvitationTable($db) {
     $this->dropTable($db, "invitations");
     $this->runQuery($db, "create table if not exists invitations (" .
                     "invitee mediumint unsigned not null," .
@@ -293,10 +285,10 @@ class DBInstaller {
                     ") ENGINE=INNODB");
   }
 
-  function createImageTable(&$db) {
+  function createImageTable($db) {
     $this->createStandardTable($db, "images",
                    "create table if not exists images (" .
-                   "id mediumint unsigned not null," .
+                   "id mediumint unsigned not null AUTO_INCREMENT," .
                    "uid CHAR(30) NOT NULL," .
                    "recipeid mediumint unsigned not null," .
                    "recipeuid char(30) not null," .
@@ -313,10 +305,10 @@ class DBInstaller {
                    "primary key(id))", null, __FILE__, __LINE__);
   }
 
-  function createStepsTable(&$db) {
+  function createStepsTable($db) {
     $this->createStandardTable($db, "steps", 
                                "create table if not exists steps (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "recipeid mediumint unsigned not null," .
                                "orderid smallint unsigned not null," .
                                "step blob not null," .
@@ -325,10 +317,10 @@ class DBInstaller {
                                "primary key(id))", null, __FILE__, __LINE__);
   }
 
-  function createIngredientsTable(&$db) {
+  function createIngredientsTable($db) {
     $this->createStandardTable($db, "ingredients",
                                "create table if not exists ingredients (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "setid mediumint unsigned not null," .
                                "amount char(" . INGREDIENT_AMOUNT_LENGTH . ") not null," .
                                "description varchar(" . INGREDIENT_DESCRIPTION_LENGTH . ") not null," .
@@ -339,10 +331,10 @@ class DBInstaller {
                                "primary key(id))", null, __FILE__, __LINE__);
   }
 
-  function createIngredientSetsTable(&$db) {
+  function createIngredientSetsTable($db) {
     $this->createStandardTable($db, "ingredientsets",
                                "create table if not exists ingredientsets (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "recipeid mediumint unsigned not null," .
                                "orderid smallint unsigned not null," .
                                "name varchar(" . INGREDIENT_SET_NAME_LENGTH . ") not null," .
@@ -351,10 +343,10 @@ class DBInstaller {
                                "primary key(id))");
   }
 
-  function createRecipesTable(&$db) {
+  function createRecipesTable($db) {
     $this->createStandardTable($db, "recipes",
                                "create table if not exists recipes (" .
-                               "id MEDIUMINT UNSIGNED NOT NULL," .
+                               "id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT," .
                                "name CHAR(" . RECIPE_NAME_FIELD_LENGTH . ") NOT NULL," .
                                "uniqueid CHAR(30) NOT NULL," .
                                "source char(" . RECIPE_SOURCE_FIELD_LENGTH . ")," .
@@ -376,10 +368,10 @@ class DBInstaller {
                                "primary key(id))");
   }
 
-  function createCategoriesTable(&$db) {
+  function createCategoriesTable($db) {
     $this->createStandardTable($db, "categories",
                                "create table if not exists categories (" .
-                               "id SMALLINT UNSIGNED NOT NULL," .
+                               "id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," .
                                "name CHAR(" . CATEGORY_NAME_LENGTH . ") NOT NULL," .
                                "modifieddate timestamp," .
                                "createdate timestamp," .
@@ -387,10 +379,10 @@ class DBInstaller {
                                "PRIMARY KEY (id))");
   }
 
-  function createCommentTable(&$db) {
+  function createCommentTable($db) {
     $this->createStandardTable($db, "comments",
                                "create table if not exists comments (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "comment blob,".
                                "recipeid mediumint unsigned not null,".
                                "userid mediumint unsigned not null," .
@@ -406,7 +398,7 @@ class DBInstaller {
                                "primary key (id))");
   }
 
-  function createRecipeToCategory(&$db) {
+  function createRecipeToCategory($db) {
     $this->dropTable($db, "recipetocategory");
     $this->runQuery($db,
                     "create table if not exists recipetocategory (" .
@@ -420,14 +412,14 @@ class DBInstaller {
                     ") ENGINE = INNODB");
   }
 
-  function createUsersTable(&$db) {
+  function createUsersTable($db) {
     $this->createStandardTable($db, "users",
                                "create table if not exists users (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "email varchar(100) not null," .
                                "name varchar(100) not null," .
 							   "username varchar(50) not null," .
-                               "password char(33) not null," .
+                               "password varchar(255) not null," .
                                "auth char(32)," .
                                "disabled tinyint," .
                                "invited tinyint," .
@@ -442,10 +434,10 @@ class DBInstaller {
                                "primary key(id))");
   }
 
-  function createGroceryListTable(&$db) {
+  function createGroceryListTable($db) {
     $this->createStandardTable($db, "groceryitems",
                     "create table if not exists groceryitems (" .
-                    "id mediumint unsigned not null," .
+                    "id mediumint unsigned not null AUTO_INCREMENT," .
                     "userid mediumint unsigned not null, " .
                     "description varchar(100) not null, " .
                     "orderid mediumint not null," . 
@@ -453,33 +445,29 @@ class DBInstaller {
                     "primary key(id))");
   }
   
-    function createGuestbookTable(&$db) {
+    function createGuestbookTable($db) {
     $this->createStandardTable($db, "guestbook",
                     "create table if not exists guestbook (" .
-                    "id mediumint unsigned not null," .
+                    "id mediumint unsigned not null AUTO_INCREMENT," .
                     "name varchar(100) not null, " .
                     "comment blob not null, " .
                     "postdate datetime not null," .
                     "primary key(id))");
   }
 
-  function createStandardTable(&$db, $table, $sql) {
+  function createStandardTable($db, $table, $sql) {
     $this->dropTable($db, $table);
     $this->runQuery($db, $sql . " ENGINE = INNODB", null, __FILE__, __LINE__);
-    $this->modifyId($db, $table);
-    $this->createSequence($db, $table);
   }
 
-  function modifyId(&$db, $table) {
+  function modifyId($db, $table) {
   }
 
-  function dropTable(&$db, $table) {
+  function dropTable($db, $table) {
   }
 
-  function createSequence(&$db, $table) {
-    $sequence = $db->getSequenceName($table);
-    $db->query("drop table if exists $sequence");
-    @$db->createSequence($table);
+  function createSequence($db, $table) {
+    // No-op: AUTO_INCREMENT replaces PEAR DB sequences
   }
 
   function logError($log, $file, $line) {

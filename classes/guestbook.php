@@ -32,11 +32,11 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class GuestbookFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new Guestbook();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "guestbook";
   }
 }
