@@ -20,6 +20,7 @@
  */
 
 class Captcha {
+  public $challenge;
   
   function __construct() {
   }

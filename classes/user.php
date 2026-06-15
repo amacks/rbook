@@ -159,7 +159,7 @@ class User extends BaseRecord {
     User::deleteMultiple(array('id' => array($this->id)));
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "users");
   }
 
@@ -167,7 +167,7 @@ class User extends BaseRecord {
    * Returns an array of users
    */
 
-  function loadMultiple($qualifiers = null, $limit = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null) {
     $db = BaseRecord::getDb();
     
     $query = "select * from users " . 
@@ -190,7 +190,7 @@ class User extends BaseRecord {
   }
 
 
-  function loadOne($qualifiers) {
+  public static function loadOne($qualifiers) {
     $users = User::loadMultiple($qualifiers, 1);
     if(count($users)) {
       return $users[0];

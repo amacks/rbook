@@ -48,6 +48,9 @@ class BaseController {
    */
 
   public $requireAuth;
+  public $currentAction;
+  public $requireAdmin;
+  public $validActions;
 
   /**
    * @var string The name of the controller.  This is passed into the

@@ -43,21 +43,21 @@ CONFIG=/var/www/html/config.php
 
 cat > "$CONFIG" <<PHP
 <?php
-define("DBHOST",       "${DBHOST}");
-define("DBUSER",       "${DBUSER}");
-define("DBPASSWORD",   "${DBPASSWORD}");
-define("DBNAME",       "${DBNAME}");
-define("APPROOT",      "${APPROOT}");
-define("STYLESHEET",   "style.css");
-define("DISPLAYIFONLYONE", true);
-define("SKIN",         "${SKIN}");
-define("APPTITLE",     "${APPTITLE}");
-define("VIEW_POLICY",  "${VIEW_POLICY}");
-define("MAXINVITATIONS", ${MAXINVITATIONS});
-define("ALLOW_REGISTRATION", ${ALLOW_REGISTRATION});
-define("LANGUAGE",     "${LANGUAGE}");
-define("DEBUG",        ${DEBUG});
-define("RECIPESUGGEST", false);
+if (!defined("DBHOST"))            define("DBHOST",       "${DBHOST}");
+if (!defined("DBUSER"))            define("DBUSER",       "${DBUSER}");
+if (!defined("DBPASSWORD"))        define("DBPASSWORD",   "${DBPASSWORD}");
+if (!defined("DBNAME"))            define("DBNAME",       "${DBNAME}");
+if (!defined("APPROOT"))           define("APPROOT",      "${APPROOT}");
+if (!defined("STYLESHEET"))        define("STYLESHEET",   "style.css");
+if (!defined("DISPLAYIFONLYONE")) define("DISPLAYIFONLYONE", true);
+if (!defined("SKIN"))              define("SKIN",         "${SKIN}");
+if (!defined("APPTITLE"))          define("APPTITLE",     "${APPTITLE}");
+if (!defined("VIEW_POLICY"))       define("VIEW_POLICY",  "${VIEW_POLICY}");
+if (!defined("MAXINVITATIONS"))    define("MAXINVITATIONS", ${MAXINVITATIONS});
+if (!defined("ALLOW_REGISTRATION")) define("ALLOW_REGISTRATION", ${ALLOW_REGISTRATION});
+if (!defined("LANGUAGE"))          define("LANGUAGE",     "${LANGUAGE}");
+if (!defined("DEBUG"))             define("DEBUG",        ${DEBUG});
+if (!defined("RECIPESUGGEST"))     define("RECIPESUGGEST", false);
 PHP
 
 if [ -n "${IMAGEMAGICK:-}" ]; then

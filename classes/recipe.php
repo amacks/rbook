@@ -29,6 +29,7 @@
 
 require_once(dirname(__FILE__) . '/base_record.php');
 require_once(dirname(__FILE__) . "/category.php");
+require_once(dirname(__FILE__) . "/image.php");
 
 define("BASE_SEARCH_QUERY", "SELECT distinct recipes.id as recipeid," .
     "recipes.name as title,recipes.description, recipes.cached_rating, recipes.cached_ratinghits, " .
@@ -56,6 +57,9 @@ class Recipe extends BaseRecord {
   public $cachedRating;
   public $cachedRatingHits;
   public $lastViewed;
+  public $note;
+  public $categories;
+  public $visits;
   public $viewCount;
 
   function __construct() {
@@ -392,7 +396,7 @@ class Recipe extends BaseRecord {
 
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     BaseRecord::deleteMultipleOfClass($qualifiers, "recipes");
   }
 
@@ -464,7 +468,7 @@ class Recipe extends BaseRecord {
    * recipe object or null if it cannot be found.
    */
 
-  function load($id) {
+  public static function load($id) {
     $db = BaseRecord::getDb();
 
     $result = BaseRecord::runQuery($db,"select recipes.serves, cooktime, preptime, visits, lastvisit, recipes.name as recipe_name,source,preheat,uniqueid" .
@@ -493,7 +497,7 @@ class Recipe extends BaseRecord {
    * @param categories the list of category ids
    */
 
-  function categoriesUsed($categories) {
+  public static function categoriesUsed($categories) {
     $db = BaseRecord::getDb();
     $qualifiers = array("categoryid" => $categories);
     $query = "SELECT count(recipeid) from recipetocategory " . BaseRecord::buildWhereClauseDb($qualifiers);
@@ -515,7 +519,7 @@ class Recipe extends BaseRecord {
     $db->disconnect();
   }
 
-  function changeCategories($categories, $toCategory) {
+  public static function changeCategories($categories, $toCategory) {
     $db = BaseRecord::getDb();
     $qualifiers = array("categoryid" => $categories);
     $query = "update ignore recipetocategory set categoryid = ? " .
@@ -528,7 +532,7 @@ class Recipe extends BaseRecord {
     $db->disconnect();
   }
 
-  function searchByAuthor($authorId) {
+  public static function searchByAuthor($authorId) {
     $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
       "users.name as uname, users.id as uid, users.username as username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
@@ -538,7 +542,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function searchByMostRecentAndAuthor($limit, $authorId) {
+  public static function searchByMostRecentAndAuthor($limit, $authorId) {
     $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
       "users.name as uname, users.id as uid, users.username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
@@ -548,7 +552,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function searchForMostPopular($limit) {
+  public static function searchForMostPopular($limit) {
 	$db = BaseRecord::getDb();
 	$query = BASE_SEARCH_QUERY .
 	  "where recipes.submittedby = users.id order by visits desc";
@@ -556,7 +560,7 @@ class Recipe extends BaseRecord {
 	return Recipe::processResults($db, $res);
   }
 
-  function searchForMostRecent($limit) {
+  public static function searchForMostRecent($limit) {
     $db = BaseRecord::getDb();
     $query = BASE_SEARCH_QUERY .
       "where recipes.submittedby = users.id order by recipes.createdate desc";
@@ -576,7 +580,7 @@ class Recipe extends BaseRecord {
     return ($this->getCookTime() + $this->getPrepTime());
   }
 
-  function searchByTitle($title) {
+  public static function searchByTitle($title) {
     $db = BaseRecord::getDb();
     $title = $db->escapeSimple($title);
     $query = BASE_SEARCH_QUERY . " WHERE recipes.name like '$title%'" .
@@ -586,7 +590,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function searchByKeyword($keyword) {
+  public static function searchByKeyword($keyword) {
     if(empty($keyword)) {
       return Recipe::searchByTitle($keyword);
     }
@@ -601,7 +605,7 @@ class Recipe extends BaseRecord {
     return Recipe::processResults($db, $res);
   }
 
-  function processResults($db, $res) {
+  public static function processResults($db, $res) {
     $resultSet = array();
     while ($res->fetchInto($row,  DB_FETCHMODE_ASSOC)) {
       $resultSet[] = new SearchResult($row['title'], buildViewUrl($row['recipeid']),
@@ -615,7 +619,7 @@ class Recipe extends BaseRecord {
     return $resultSet;
   }
 
-  function addImages(&$db, &$results) {
+  public static function addImages(&$db, &$results) {
     for($i = 0; $i < count($results); $i++) {
       $foo = $results[$i];
       $images = Image::findForRecipe($foo->recipeId);
@@ -626,7 +630,7 @@ class Recipe extends BaseRecord {
     }
   }
 
-  function searchByCategory($categoryId) {
+  public static function searchByCategory($categoryId) {
     $db = BaseRecord::getDb();
     $query = "SELECT distinct recipes.id as recipeid,recipes.name as title,recipes.description," .
       "users.name as uname, users.username as username, recipes.cached_rating, recipes.cached_ratinghits, recipetocategory.categoryid as categoryid," .
@@ -645,7 +649,7 @@ class Recipe extends BaseRecord {
     return $foo;
   }
   
-  function getRandomId() {
+  public static function getRandomId() {
     $db = BaseRecord::getDb();
     $query = "SELECT id FROM recipes ORDER BY RAND() LIMIT 1";
     $res = BaseRecord::runQuery($db,$query);
@@ -653,7 +657,7 @@ class Recipe extends BaseRecord {
     return $row['id'];
   }
   
-  function getRecipeCount() {
+  public static function getRecipeCount() {
     $db = BaseRecord::getDb();
     $query = "SELECT count(id) number FROM recipes";
     $res = BaseRecord::runQuery($db,$query);

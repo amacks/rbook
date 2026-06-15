@@ -89,7 +89,7 @@ class Category extends BaseRecord {
    * passed in the $notIn parameter.
    */
 
-  function loadCategoriesNotIn(&$notIn) {
+  public static function loadCategoriesNotIn(&$notIn) {
     $questions = array();
     for($i = 0; $i < count($notIn); $i++) {
       $questions[] = "?";
@@ -117,7 +117,7 @@ class Category extends BaseRecord {
     return $cats;
   }
 
-  function processResults($results) {
+  public static function processResults($results) {
     $categories = array();
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $cat = new Category();
@@ -132,7 +132,7 @@ class Category extends BaseRecord {
    * Deletes multiple categories.
    */
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     BaseRecord::deleteMultipleOfClass($qualifiers, "categories");
   }
 
@@ -142,7 +142,7 @@ class Category extends BaseRecord {
    * @param limit a limit on the number of results to pass in (or null for no limit).
    */
 
-	function loadMultiple($qualifiers = null, $limit = null, $db = null) {
+	public static function loadMultiple($qualifiers = null, $limit = null, $db = null) {
 		if(!isset($db)) {
 			$db = BaseRecord::getDb();
 		}
@@ -172,7 +172,7 @@ class Category extends BaseRecord {
    * Returns one Category specified by the qualifiers
    */
 
-  function loadOne($qualifiers, $db = null) {
+  public static function loadOne($qualifiers, $db = null) {
     $cat = Category::loadMultiple($qualifiers, 1, $db);
     if(count($cat)) {
       return $cat[0];

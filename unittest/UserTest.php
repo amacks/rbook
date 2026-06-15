@@ -62,6 +62,7 @@ class UserTest extends BaseDBTest {
 		$user = new User();
 		$this->assertTrue($user->id == -1);
 		$user->name = "foo";
+		$user->username = "foouser";
 		$user->email = "foo@bar.com";
 		$user->admin = 1;
 		$user->auth = null;

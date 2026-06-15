@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="unittest/bootstrap.php"
          colors="true">
     <testsuites>
         <testsuite name="rbook">
             <directory>unittest</directory>
+            <exclude>unittest/BaseDBTest.php</exclude>
+            <exclude>unittest/TestUtils.php</exclude>
+            <exclude>unittest/rbook_test_suite.php</exclude>
         </testsuite>
     </testsuites>
 </phpunit>

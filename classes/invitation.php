@@ -83,7 +83,7 @@ class Invitation extends BaseRecord {
     $db->disconnect();
   }
 
-  function load($code) {
+  public static function load($code) {
     $db = BaseRecord::getDb();
 
     $results = BaseRecord::runQuery($db, "select invitee, inviter, code, createdate, modifieddate, " .

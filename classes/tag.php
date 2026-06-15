@@ -24,6 +24,7 @@ class Tag extends Token {
   public $name;
   public $begin;
   public $both;
+  public $params;
   function __construct($name, $begin, $both, $paramlist) {
     $this->name = $name;
     $this->begin = $begin;

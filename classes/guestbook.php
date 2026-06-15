@@ -83,7 +83,7 @@ class Guestbook extends BaseRecord {
     }
   }
 
-  function loadOne($qualifiers) {
+  public static function loadOne($qualifiers) {
     $guestbook = Guestbook::loadMultiple($qualifiers, 1);
     if(count($guestbook)) {
       return $guestbook[0];
@@ -91,11 +91,11 @@ class Guestbook extends BaseRecord {
     return null;
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "guestbook");
   }
 
-  function loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new GuestbookFactory(), $qualifiers, $limit, $db, "postdate DESC");
   }
 

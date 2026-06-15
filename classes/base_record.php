@@ -68,6 +68,9 @@ class BaseRecord {
 
   public $requiresValues;
 
+  /** Table name for this record type. Set by subclass constructor. */
+  public $tableName;
+
   /**
    * Constructs a base record.
    * @param tableName the table name associated with this record.
@@ -86,7 +89,7 @@ class BaseRecord {
    * @return RbDb
    */
 
-  function getDb(): RbDb {
+  public static function getDb(): RbDb {
     $db = new RbDb(rb_get_pdo());
     $db->beginTransaction();
     return $db;
@@ -98,7 +101,7 @@ class BaseRecord {
    * @static
    */
 
-  function runQuery($db, $query, $params = null, $file = null, $line = null) {
+  public static function runQuery($db, $query, $params = null, $file = null, $line = null) {
     if (isset($params)) {
       if (is_array($params)) {
         rb_log("Running query: " . $query . ", params: " . implode(",", $params));
@@ -164,7 +167,7 @@ class BaseRecord {
    * Deletes objects based on the qualifiers specified.
    */
 
-  function deleteMultipleOfClass(&$qualifiers, $tableName) {
+  public static function deleteMultipleOfClass(&$qualifiers, $tableName) {
     $db = BaseRecord::getDb();
     $res = BaseRecord::runQuery($db, "delete from $tableName " .
                                  BaseRecord::buildWhereClauseDb($qualifiers),
@@ -184,7 +187,7 @@ class BaseRecord {
    * Constructs a 'where' clause based on the qualifiers passed in.
    */
 
-  function buildWhereClauseDb(&$qualifiers) {
+  public static function buildWhereClauseDb(&$qualifiers) {
     if(!(isset($qualifiers) && count($qualifiers))) {
       return "";
     }
@@ -206,7 +209,7 @@ class BaseRecord {
     }
     return $whereClause;
   }
-  function prepareQualifiers(&$qualifiers) {
+  public static function prepareQualifiers(&$qualifiers) {
     if(!isset($qualifiers)) {
 	  $foo = array();
 	  return $foo;
@@ -223,7 +226,7 @@ class BaseRecord {
     return $valueList;
       
   }
-  function loadMultipleBasic($factory, $qualifiers = null, $limit = null, $db = null, $orderByCSV = null) {
+  public static function loadMultipleBasic($factory, $qualifiers = null, $limit = null, $db = null, $orderByCSV = null) {
     $cascade = isset($db);
     if(!$cascade) {
       $db = BaseRecord::getDb();
@@ -251,7 +254,7 @@ class BaseRecord {
     return $results;
   }
 
-  function createUid() {
+  public static function createUid() {
     return "" . time();
   }
 

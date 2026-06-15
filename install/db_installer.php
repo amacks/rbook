@@ -48,6 +48,7 @@ if(!defined("LANGUAGE")) define("LANGUAGE", "en");
 
 class DBInstaller {
   public $databaseName;
+  public $databasePort = '3306';
   public $action;
   public $databaseHost;
   public $adminUser;
@@ -65,6 +66,9 @@ class DBInstaller {
   public $exportDirectory;
   public $buildDatabase;
   public $language;
+  public $convertProgram;
+  public $skin;
+  public $title;
 
   function __construct() {
     $this->databaseName = DBNAME;
@@ -142,7 +146,7 @@ class DBInstaller {
   }
 
   function getDb() {
-    $dsn = "mysql:host={$this->databaseHost};dbname={$this->databaseName};charset=utf8";
+    $dsn = "mysql:host={$this->databaseHost};port={$this->databasePort};dbname={$this->databaseName};charset=utf8";
     try {
       $pdo = new PDO($dsn, $this->adminUser, $this->password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -156,10 +160,17 @@ class DBInstaller {
 
   function uninstall() {
     try {
-      $dsn = "mysql:host={$this->databaseHost};charset=utf8";
+      $dsn = "mysql:host={$this->databaseHost};port={$this->databasePort};charset=utf8";
       $pdo = new PDO($dsn, $this->adminUser, $this->password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
       ]);
+      // Kill any active connections to this database before dropping it.
+      $stmt = $pdo->query(
+        "SELECT id FROM information_schema.processlist WHERE db = " . $pdo->quote($this->databaseName)
+      );
+      foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        try { $pdo->exec("KILL CONNECTION $id"); } catch (PDOException $ignore) {}
+      }
       $pdo->exec("DROP DATABASE IF EXISTS `{$this->databaseName}`");
     } catch (PDOException $e) {
       $this->logError($e->getMessage(), __FILE__, __LINE__);
@@ -207,11 +218,14 @@ class DBInstaller {
     if(empty($this->dbUserName)) {
       return;
     }
-    $this->runQuery($db, "grant update,insert,delete,select on " .
-                    $this->databaseName . ".* to '" .
-                    $this->dbUserName . "'@'" . $this->databaseHost . "'");
-    $this->runQuery($db, "set password for '" . $this->dbUserName .
-            "'@'" . $this->databaseHost . "' = PASSWORD('" . $this->password . "')");
+    $user = $this->dbUserName;
+    $host = $this->databaseHost;
+    $pass = $this->password;
+    // MySQL 8: CREATE USER IF NOT EXISTS, then GRANT, then ALTER USER for password
+    $this->runQuery($db, "CREATE USER IF NOT EXISTS '{$user}'@'{$host}' IDENTIFIED BY '{$pass}'");
+    $this->runQuery($db, "GRANT UPDATE,INSERT,DELETE,SELECT ON `{$this->databaseName}`.* TO '{$user}'@'{$host}'");
+    $this->runQuery($db, "ALTER USER '{$user}'@'{$host}' IDENTIFIED BY '{$pass}'");
+    $this->runQuery($db, "FLUSH PRIVILEGES");
   }
 
   function populateCategories($db) {
@@ -428,8 +442,7 @@ class DBInstaller {
                                "readonly smallint unsigned not null," .
                                "admin smallint unsigned not null," .
                                "modifieddate timestamp," .
-                               "createdate timestamp not null," .
-                               "unique (email)," .
+                               "createdate timestamp not null DEFAULT CURRENT_TIMESTAMP," .
 							   "unique (username)," .
                                "primary key(id))");
   }
@@ -475,8 +488,9 @@ class DBInstaller {
   }
 
   function createConfigFile() {
-    $path = realpath("..");
-    $file = $path . "/config.php";
+    // dirname(__FILE__) = install/ directory; parent is always the app root
+    $path = dirname(__FILE__) . '/..';
+    $file = realpath($path) . "/config.php";
     error_reporting(0);
     $fp = fopen($file, "w");
     $lt = '<';
@@ -489,64 +503,64 @@ class DBInstaller {
     }
     $buf = $lt . '?' . 'php' . $eol;
     $buf = $buf . "/* the host that the database is running on */$eol";
-    $buf = $buf . "define(\"DBHOST\", \"" . $this->databaseHost . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBHOST\")) define(\"DBHOST\", \"" . $this->databaseHost . "\");$eol$eol";
     $user = $this->dbUserName;
     if(empty($user)) {
       $user = $this->adminUser;
     }
     $buf = $buf . "/* the database user that the application uses to access the database */$eol";
-    $buf = $buf . "define(\"DBUSER\", \"" . $user . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBUSER\")) define(\"DBUSER\", \"" . $user . "\");$eol$eol";
     $password = $this->password;
     if(empty($password)) {
       $password = $this->dbUserName;
     }
     $buf = $buf . "/* the password used to access the database */$eol";
-    $buf = $buf . "define(\"DBPASSWORD\", \"" . $password . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBPASSWORD\")) define(\"DBPASSWORD\", \"" . $password . "\");$eol$eol";
     $buf = $buf . "/* the database name */$eol";
-    $buf = $buf . "define(\"DBNAME\",\"" . $this->databaseName . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBNAME\")) define(\"DBNAME\",\"" . $this->databaseName . "\");$eol$eol";
     $buf = $buf . "/* The URI of the application.  This should always end in a '/'.";
     $buf = $buf . "For instance,$eol   if you are running this at the top-level, it would be /.  ";
     $buf = $buf . "If the URL was$eol   www.foo-bar.com/rbook/, the APPROOT would be /rbook/ */$eol";
-    $buf = $buf . "define(\"APPROOT\",\"" . $this->approot . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"APPROOT\")) define(\"APPROOT\",\"" . $this->approot . "\");$eol$eol";
     $buf = $buf . "/* the stylesheet to use (this should reside in ./style */$eol";
-    $buf = $buf . "define(\"STYLESHEET\",\"style.css\");$eol$eol";
+    $buf = $buf . "if (!defined(\"STYLESHEET\")) define(\"STYLESHEET\",\"style.css\");$eol$eol";
     $buf = $buf . "/* whether to display recipe if only one result is returned */$eol";
-    $buf = $buf . "define(\"DISPLAYIFONLYONE\", true);$eol$eol";
+    $buf = $buf . "if (!defined(\"DISPLAYIFONLYONE\")) define(\"DISPLAYIFONLYONE\", true);$eol$eol";
     $buf = $buf . "/* The skin that is being used.  This should be the name of a directory under the skins directory */$eol";
-    $buf = $buf . "define(\"SKIN\",\"" . $this->skin . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"SKIN\")) define(\"SKIN\",\"" . $this->skin . "\");$eol$eol";
     $buf = $buf . "/* the title to be displayed in the title bar and in the header */$eol";
-    $buf = $buf . "define(\"APPTITLE\",\"" . $this->title . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"APPTITLE\")) define(\"APPTITLE\",\"" . $this->title . "\");$eol$eol";
     $buf = $buf . "/* the intial user (not used by app, just for re-install) */$eol";
-    $buf = $buf . "define(\"INITIALUSER\",\"" . $this->initialUser . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"INITIALUSER\")) define(\"INITIALUSER\",\"" . $this->initialUser . "\");$eol$eol";
     $buf = $buf . "/* the intial email (not used by app, just for re-install) */$eol";
-    $buf = $buf . "define(\"INITIALEMAIL\",\"" . $this->initialEmail . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"INITIALEMAIL\")) define(\"INITIALEMAIL\",\"" . $this->initialEmail . "\");$eol$eol";
     $buf = $buf . "/* Maximum number of invitations a user can send (0 to disable) */$eol";
-    $buf = $buf . "define(\"MAXINVITATIONS\", $this->maxInvitations);$eol$eol";
+    $buf = $buf . "if (!defined(\"MAXINVITATIONS\")) define(\"MAXINVITATIONS\", $this->maxInvitations);$eol$eol";
     $buf = $buf . "/* Enable debugging */$eol";
-    $buf = $buf . "define(\"DEBUG\", false);$eol$eol";
+    $buf = $buf . "if (!defined(\"DEBUG\")) define(\"DEBUG\", false);$eol$eol";
     $buf = $buf . "/* Log file path (e.g. /foo/bar/rbook.log) */$eol";
     $buf = $buf . "//define(\"LOG_FILE_PATH\", \"\");$eol$eol";
 	$buf = $buf . "/* To turn on google analytics, uncomment this line and put the value of your google analytics acount */$eol";
 	$buf = $buf . "//define(\"GOOGLE_ANALYTICS\", \"\");$eol$eol";
     $buf = $buf . "/* turn on/off recipe-suggest */$eol";
-    $buf = $buf . "define(\"RECIPESUGGEST\",false);$eol$eol";
+    $buf = $buf . "if (!defined(\"RECIPESUGGEST\")) define(\"RECIPESUGGEST\",false);$eol$eol";
     $buf = $buf . "/* define import drop-zone.   If specified, this will be where$eol";
     $buf = $buf . " * export files will be placed for import into the current system.$eol";
     $buf = $buf . " * If this is not specified, then the Import menu option is not displayed.$eol";
     $buf = $buf . " */$eol";
     if(!empty($this->exportDirectory)) {
-      $buf = $buf . "define(\"IMPORTDIR\", \"" . $this->exportDirectory . "\");$eol$eol";
+      $buf = $buf . "if (!defined(\"IMPORTDIR\")) define(\"IMPORTDIR\", \"" . $this->exportDirectory . "\");$eol$eol";
     } else {
       $buf = $buf . "//define(\"IMPORTDIR\", \"\");$eol$eol";
     }
     $buf = $buf . "/* Path to convert executable program used to scale images to size */$eol";
     if(!empty($this->convertProgram)) {
-      $buf = $buf . "define(\"IMAGEMAGICK\", \"" . $this->convertProgram . "\");$eol$eol";
+      $buf = $buf . "if (!defined(\"IMAGEMAGICK\")) define(\"IMAGEMAGICK\", \"" . $this->convertProgram . "\");$eol$eol";
     }
     $buf = $buf . "/* this can either be member or all.  If it is member only members can view the recipes.*/$eol";
-    $buf = $buf . "define(\"VIEW_POLICY\",\"" . $this->viewPolicy . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"VIEW_POLICY\")) define(\"VIEW_POLICY\",\"" . $this->viewPolicy . "\");$eol$eol";
 	$buf = $buf . "/* The language you want rbook to be displayed in.*/$eol";
-    $buf = $buf . "define(\"LANGUAGE\",\"" . $this->language . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"LANGUAGE\")) define(\"LANGUAGE\",\"" . $this->language . "\");$eol$eol";
     $buf = $buf . "?$gt";
 
     error_reporting(E_ALL);

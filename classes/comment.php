@@ -83,11 +83,11 @@ class Comment extends BaseRecord {
       $db->disconnect();
     }
   }
-  function findByRecipe($recipeid) {
+  public static function findByRecipe($recipeid) {
     return Comment::loadMultiple(array('recipeid' => $recipeid));
   }
 
-  function loadOne($qualifiers) {
+  public static function loadOne($qualifiers) {
     $comments = Comment::loadMultiple($qualifiers, 1);
     if(count($comments)) {
       return $comments[0];
@@ -95,11 +95,11 @@ class Comment extends BaseRecord {
     return null;
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "comments");
   }
 
-  function loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new CommentFactory(), $qualifiers, $limit, $db);
   }
 

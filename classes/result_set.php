@@ -38,6 +38,7 @@ class ResultSet {
   public $page;
   public $name;
   public $displayResultCount;
+  public $numberOfPages;
   public $nextPage;
   public $fromPage;
   /** 

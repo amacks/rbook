@@ -19,17 +19,37 @@ if (!defined('DB_FETCHMODE_ORDERED')) {
  * Returns the shared PDO connection for this request.
  * A single PDO instance is reused across all getDb() calls within one request.
  */
+/** @var PDO|null Singleton PDO connection, resettable for tests. */
+$GLOBALS['_rb_pdo'] = null;
+
 function rb_get_pdo(): PDO {
-    static $pdo = null;
-    if ($pdo === null) {
-        $dsn = 'mysql:host=' . DBHOST . ';dbname=' . DBNAME . ';charset=utf8mb4';
-        $pdo = new PDO($dsn, DBUSER, DBPASSWORD, [
+    if ($GLOBALS['_rb_pdo'] === null) {
+        $dsn = 'mysql:host=' . DBHOST . ';port=' . (defined('DBPORT') ? DBPORT : '3306') . ';dbname=' . DBNAME . ';charset=utf8mb4';
+        $GLOBALS['_rb_pdo'] = new PDO($dsn, DBUSER, DBPASSWORD, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
     }
-    return $pdo;
+    return $GLOBALS['_rb_pdo'];
+}
+
+/**
+ * Resets the PDO singleton — used in tests to get a fresh connection
+ * after the test database is dropped and recreated between test cases.
+ */
+function rb_reset_pdo(): void {
+    if ($GLOBALS['_rb_pdo'] !== null) {
+        try {
+            if ($GLOBALS['_rb_pdo']->inTransaction()) {
+                $GLOBALS['_rb_pdo']->rollBack();
+            }
+        } catch (Throwable $e) {
+            // ignore — connection may already be gone
+        }
+    }
+    unset($GLOBALS['_rb_pdo']);
+    $GLOBALS['_rb_pdo'] = null;
 }
 
 /**

@@ -27,14 +27,14 @@
  */
 
 class MysqlDBInstaller extends DBInstaller {
-  
+
   function __construct() {
     parent::__construct();
   }
   
   function createDatabase() {
     try {
-      $dsn = "mysql:host={$this->databaseHost};charset=utf8";
+      $dsn = "mysql:host={$this->databaseHost};port={$this->databasePort};charset=utf8";
       $pdo = new PDO($dsn, $this->adminUser, $this->password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
       ]);

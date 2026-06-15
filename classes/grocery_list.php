@@ -74,11 +74,11 @@ class GroceryList extends BaseRecord {
     GroceryList::deleteMultiple(array('id' => array($this->id)));
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "groceryitems");
   }
 
-  function findByUser($id) {
+  public static function findByUser($id) {
 	return GroceryList::loadMultiple(array('userid' => $id));
   }
 
@@ -86,7 +86,7 @@ class GroceryList extends BaseRecord {
    * Returns an array of users
    */
 
-  function loadMultiple($qualifiers = null, $limit = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null) {
     return BaseRecord::loadMultipleBasic(new GroceryListFactory(), $qualifiers, null, null);
   }
 
