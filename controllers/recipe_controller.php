@@ -58,7 +58,7 @@ class RecipeController extends BaseController {
 
   /**
    * Invoke to change the sort type
-   * @param by can be 'recent' or 'popular'
+   * @param $by:string can be 'recent' or 'popular'
    */
   function sort_by($by) {
 	setCookie('sortType', $by, time() + 2600000, APPROOT);
@@ -99,7 +99,7 @@ class RecipeController extends BaseController {
 
   /**
    * Views a recipe
-   * @param id the database ID of the recipe; if not specified, attempt to view the recipe in session
+   * @param "id" the database ID of the recipe; if not specified, attempt to view the recipe in session
    */
   function view($id) {
     $recipe = $this->getRecipe(false, $id);
