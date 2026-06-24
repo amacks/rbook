@@ -26,12 +26,10 @@
  * @since 0.9
  * @version $Id: db_installer.php,v 1.18 2007/04/07 01:45:00 aviolette Exp $
  */
-require_once('DB.php');
+require_once(dirname(__FILE__) . "/../const.php");
 
-require_once("../const.php");
-
-if(file_exists('../config.php')) {
-  include('../config.php');
+if(file_exists(dirname(__FILE__) . '/../config.php')) {
+  include(dirname(__FILE__) . '/../config.php');
   define("DBACTION", "fresh");
 } else {
   define("DBACTION", "fresh");
@@ -49,26 +47,31 @@ if(!defined("SKIN")) define("SKIN", "default");
 if(!defined("LANGUAGE")) define("LANGUAGE", "en");
 
 class DBInstaller {
-  var $databaseName;
-  var $action;
-  var $databaseHost;
-  var $adminUser;
-  var $password;
-  var $create;
-  var $initialUser;
-  var $initialEmail;
-  var $errors;
-  var $exists;
-  var $dbUserName;
-  var $approot;
-  var $config;
-  var $viewPolicy;
-  var $maxInvitations;
-  var $exportDirectory;
-  var $buildDatabase;
-  var $language;
+  public $databaseName;
+  public $databasePort = '3306';
+  public $action;
+  public $databaseHost;
+  public $adminUser;
+  public $password;
+  public $create;
+  public $initialUser;
+  public $initialEmail;
+  public $errors;
+  public $exists;
+  public $dbUserName;
+  public $approot;
+  public $config;
+  public $viewPolicy;
+  public $maxInvitations;
+  public $exportDirectory;
+  public $buildDatabase;
+  public $language;
+  public $convertProgram;
+  public $skin;
+  public $stylesheet;
+  public $title;
 
-  function DBInstaller() {
+  function __construct() {
     $this->databaseName = DBNAME;
     $this->action = DBACTION;
     $this->adminUser = "root";
@@ -134,39 +137,44 @@ class DBInstaller {
     $this->dbUserName = $postValues['databaseUserName'];
     $this->approot = $postValues['approot'];
     $this->skin = $postValues['skin'];
-    // Check if quoting is enabled and remove escape characters from the apptitle
-	if(get_magic_quotes_gpc()) {
-        $this->title = stripslashes($postValues['title']);
-    } else {
-		$this->title = $postValues['title'];
-	}	
+    $this->title = $postValues['title'];
     $this->viewPolicy = $postValues['viewPolicy'];
-    $this->maxInvitations = $postValues['maxInvitations'];
-    $this->exportDirectory = $postValues['exportDirectory'];
-    $this->convertProgram = $postValues['imageMagick'];
+    $this->maxInvitations = $postValues['maxInvitations'] ?? 0;
+    $this->exportDirectory = $postValues['exportDirectory'] ?? '';
+    $this->convertProgram = $postValues['imageMagick'] ?? '';
     $this->buildDatabase = $postValues['action'] == "on";
 	$this->language = $postValues['language'];
   }
 
-  function getDbUrl() {
-    return "mysql://" . $this->adminUser . ":" . $this->password . "@" . $this->databaseHost . "/" . $this->databaseName;
-  }
-
-  function &getDb() {
-
-    $con =& DB::connect($this->getDbUrl());
-    if(PEAR::isError($con)) {
-	  trigger_error("Couldn't connect to database");
-	  return null;
+  function getDb() {
+    $dsn = "mysql:host={$this->databaseHost};port={$this->databasePort};dbname={$this->databaseName};charset=utf8";
+    try {
+      $pdo = new PDO($dsn, $this->adminUser, $this->password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      ]);
+      return $pdo;
+    } catch (PDOException $e) {
+      trigger_error("Couldn't connect to database: " . $e->getMessage());
+      return null;
     }
-    return $con;
   }
 
   function uninstall() {
-    $db =& $this->getDb();
-    $res =& $db->query("drop database " . $this->databaseName);
-    if(PEAR::isError($res)) {
-      $this->logError($res->getMessage(), __FILE__, __LINE__);
+    try {
+      $dsn = "mysql:host={$this->databaseHost};port={$this->databasePort};charset=utf8";
+      $pdo = new PDO($dsn, $this->adminUser, $this->password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      ]);
+      // Kill any active connections to this database before dropping it.
+      $stmt = $pdo->query(
+        "SELECT id FROM information_schema.processlist WHERE db = " . $pdo->quote($this->databaseName)
+      );
+      foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        try { $pdo->exec("KILL CONNECTION $id"); } catch (PDOException $ignore) {}
+      }
+      $pdo->exec("DROP DATABASE IF EXISTS `{$this->databaseName}`");
+    } catch (PDOException $e) {
+      $this->logError($e->getMessage(), __FILE__, __LINE__);
     }
   }
 
@@ -204,63 +212,64 @@ class DBInstaller {
     $this->createCommentTable($db);
 	$this->createGuestbookTable($db);
     $this->populateCategories($db);
-    $db->disconnect();
+    $db = null;
   }
 
-  function createDatabaseUser(&$db) {
+  function createDatabaseUser($db) {
     if(empty($this->dbUserName)) {
       return;
     }
-    $this->runQuery($db, "grant update,insert,delete,select on " .
-                    $this->databaseName . ".* to '" .
-                    $this->dbUserName . "'@'" . $this->databaseHost . "'");
-    $this->runQuery($db, "set password for '" . $this->dbUserName .
-            "'@'" . $this->databaseHost . "' = PASSWORD('" . $this->password . "')");
+    $user = $this->dbUserName;
+    $pass = $this->password;
+    $dbName = $this->databaseName;
+    // Create user with wildcard host for Docker/remote compatibility, and with the specific DB host.
+    // Use IF NOT EXISTS so existing users (e.g., created by docker-compose) keep their password.
+    foreach (['%', $this->databaseHost] as $host) {
+      $this->runQuery($db, "CREATE USER IF NOT EXISTS '{$user}'@'{$host}' IDENTIFIED BY '{$pass}'");
+      $this->runQuery($db, "GRANT UPDATE,INSERT,DELETE,SELECT ON `{$dbName}`.* TO '{$user}'@'{$host}'");
+    }
+    $this->runQuery($db, "FLUSH PRIVILEGES");
   }
 
-  function populateCategories(&$db) {
+  function populateCategories($db) {
     $categories = array(getMessage('Cat01'), getMessage('Cat02'), getMessage('Cat03'),
 						getMessage('Cat04'), getMessage('Cat05'), getMessage('Cat06'),
 						getMessage('Cat07'), getMessage('Cat08'), getMessage('Cat09'), 
                         getMessage('Cat10'));
-    for($i =0; $i < count($categories); $i++) {
-      $id = $db->nextId("categories");
-      $this->runQuery($db,"insert into categories (id, name) values (?, ?)",
-              array($id, $categories[$i]), __FILE__, __LINE__);
+    for($i = 0; $i < count($categories); $i++) {
+      $this->runQuery($db, "insert into categories (name) values (?)",
+              array($categories[$i]), __FILE__, __LINE__);
     }
   }
 
-  function &runQuery(&$db, $query, $params = null, $file = null, $line = null) {
-    if(isset($params)) {
-      $res =& $db->query($query, $params);
-    } else {
-      $res =& $db->query($query);
-    }
-    if(PEAR::isError($res)) {
+  function runQuery($db, $query, $params = null, $file = null, $line = null) {
+    try {
+      if(isset($params)) {
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
+        return $stmt;
+      } else {
+        $db->exec($query);
+        return true;
+      }
+    } catch (PDOException $e) {
       $file = empty($file) ? "" : $file;
       $line = empty($line) ? "" : $line;
-      $this->logError($res->getMessage(), $file, $line);
-      die($file . "," . $line . "," . $query . "," . $res->getMessage());
-    }
-    return $res;
-
-  }
-
-
-
-  function createInitialUser(&$db) {
-
-    $id = $db->nextId("users");
-	$params = array($id, $this->initialEmail, 'root', md5('password'), $this->initialUser);
-    $res =& $db->query("insert into users (id, email, username, password, name, readonly, admin) values (?, ?, ?, ?, ?, 0, 1)",
-               $params);
-
-    if(PEAR::isError($res)) {
-      $this->logError($res->getDebugInfo(), __FILE__, __LINE__);
+      $this->logError($e->getMessage(), $file, $line);
+      die($file . "," . $line . "," . $query . "," . $e->getMessage());
     }
   }
 
-  function createMineTable(&$db) {
+
+
+  function createInitialUser($db) {
+    $params = array($this->initialEmail, 'root', password_hash('password', PASSWORD_DEFAULT), $this->initialUser);
+    $this->runQuery($db,
+      "insert into users (email, username, password, name, readonly, admin) values (?, ?, ?, ?, 0, 1)",
+      $params, __FILE__, __LINE__);
+  }
+
+  function createMineTable($db) {
     $this->dropTable($db, "mine");
     $this->runQuery($db,
                     "create table if not exists mine (" .
@@ -275,7 +284,7 @@ class DBInstaller {
                     ") ENGINE = INNODB");
   }
 
-  function createInvitationTable(&$db) {
+  function createInvitationTable($db) {
     $this->dropTable($db, "invitations");
     $this->runQuery($db, "create table if not exists invitations (" .
                     "invitee mediumint unsigned not null," .
@@ -293,10 +302,10 @@ class DBInstaller {
                     ") ENGINE=INNODB");
   }
 
-  function createImageTable(&$db) {
+  function createImageTable($db) {
     $this->createStandardTable($db, "images",
                    "create table if not exists images (" .
-                   "id mediumint unsigned not null," .
+                   "id mediumint unsigned not null AUTO_INCREMENT," .
                    "uid CHAR(30) NOT NULL," .
                    "recipeid mediumint unsigned not null," .
                    "recipeuid char(30) not null," .
@@ -313,10 +322,10 @@ class DBInstaller {
                    "primary key(id))", null, __FILE__, __LINE__);
   }
 
-  function createStepsTable(&$db) {
+  function createStepsTable($db) {
     $this->createStandardTable($db, "steps", 
                                "create table if not exists steps (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "recipeid mediumint unsigned not null," .
                                "orderid smallint unsigned not null," .
                                "step blob not null," .
@@ -325,10 +334,10 @@ class DBInstaller {
                                "primary key(id))", null, __FILE__, __LINE__);
   }
 
-  function createIngredientsTable(&$db) {
+  function createIngredientsTable($db) {
     $this->createStandardTable($db, "ingredients",
                                "create table if not exists ingredients (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "setid mediumint unsigned not null," .
                                "amount char(" . INGREDIENT_AMOUNT_LENGTH . ") not null," .
                                "description varchar(" . INGREDIENT_DESCRIPTION_LENGTH . ") not null," .
@@ -339,10 +348,10 @@ class DBInstaller {
                                "primary key(id))", null, __FILE__, __LINE__);
   }
 
-  function createIngredientSetsTable(&$db) {
+  function createIngredientSetsTable($db) {
     $this->createStandardTable($db, "ingredientsets",
                                "create table if not exists ingredientsets (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "recipeid mediumint unsigned not null," .
                                "orderid smallint unsigned not null," .
                                "name varchar(" . INGREDIENT_SET_NAME_LENGTH . ") not null," .
@@ -351,10 +360,10 @@ class DBInstaller {
                                "primary key(id))");
   }
 
-  function createRecipesTable(&$db) {
+  function createRecipesTable($db) {
     $this->createStandardTable($db, "recipes",
                                "create table if not exists recipes (" .
-                               "id MEDIUMINT UNSIGNED NOT NULL," .
+                               "id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT," .
                                "name CHAR(" . RECIPE_NAME_FIELD_LENGTH . ") NOT NULL," .
                                "uniqueid CHAR(30) NOT NULL," .
                                "source char(" . RECIPE_SOURCE_FIELD_LENGTH . ")," .
@@ -376,10 +385,10 @@ class DBInstaller {
                                "primary key(id))");
   }
 
-  function createCategoriesTable(&$db) {
+  function createCategoriesTable($db) {
     $this->createStandardTable($db, "categories",
                                "create table if not exists categories (" .
-                               "id SMALLINT UNSIGNED NOT NULL," .
+                               "id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," .
                                "name CHAR(" . CATEGORY_NAME_LENGTH . ") NOT NULL," .
                                "modifieddate timestamp," .
                                "createdate timestamp," .
@@ -387,10 +396,10 @@ class DBInstaller {
                                "PRIMARY KEY (id))");
   }
 
-  function createCommentTable(&$db) {
+  function createCommentTable($db) {
     $this->createStandardTable($db, "comments",
                                "create table if not exists comments (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "comment blob,".
                                "recipeid mediumint unsigned not null,".
                                "userid mediumint unsigned not null," .
@@ -406,7 +415,7 @@ class DBInstaller {
                                "primary key (id))");
   }
 
-  function createRecipeToCategory(&$db) {
+  function createRecipeToCategory($db) {
     $this->dropTable($db, "recipetocategory");
     $this->runQuery($db,
                     "create table if not exists recipetocategory (" .
@@ -420,14 +429,14 @@ class DBInstaller {
                     ") ENGINE = INNODB");
   }
 
-  function createUsersTable(&$db) {
+  function createUsersTable($db) {
     $this->createStandardTable($db, "users",
                                "create table if not exists users (" .
-                               "id mediumint unsigned not null," .
+                               "id mediumint unsigned not null AUTO_INCREMENT," .
                                "email varchar(100) not null," .
                                "name varchar(100) not null," .
 							   "username varchar(50) not null," .
-                               "password char(33) not null," .
+                               "password varchar(255) not null," .
                                "auth char(32)," .
                                "disabled tinyint," .
                                "invited tinyint," .
@@ -436,16 +445,15 @@ class DBInstaller {
                                "readonly smallint unsigned not null," .
                                "admin smallint unsigned not null," .
                                "modifieddate timestamp," .
-                               "createdate timestamp not null," .
-                               "unique (email)," .
+                               "createdate timestamp not null DEFAULT CURRENT_TIMESTAMP," .
 							   "unique (username)," .
                                "primary key(id))");
   }
 
-  function createGroceryListTable(&$db) {
+  function createGroceryListTable($db) {
     $this->createStandardTable($db, "groceryitems",
                     "create table if not exists groceryitems (" .
-                    "id mediumint unsigned not null," .
+                    "id mediumint unsigned not null AUTO_INCREMENT," .
                     "userid mediumint unsigned not null, " .
                     "description varchar(100) not null, " .
                     "orderid mediumint not null," . 
@@ -453,33 +461,29 @@ class DBInstaller {
                     "primary key(id))");
   }
   
-    function createGuestbookTable(&$db) {
+    function createGuestbookTable($db) {
     $this->createStandardTable($db, "guestbook",
                     "create table if not exists guestbook (" .
-                    "id mediumint unsigned not null," .
+                    "id mediumint unsigned not null AUTO_INCREMENT," .
                     "name varchar(100) not null, " .
                     "comment blob not null, " .
                     "postdate datetime not null," .
                     "primary key(id))");
   }
 
-  function createStandardTable(&$db, $table, $sql) {
+  function createStandardTable($db, $table, $sql) {
     $this->dropTable($db, $table);
     $this->runQuery($db, $sql . " ENGINE = INNODB", null, __FILE__, __LINE__);
-    $this->modifyId($db, $table);
-    $this->createSequence($db, $table);
   }
 
-  function modifyId(&$db, $table) {
+  function modifyId($db, $table) {
   }
 
-  function dropTable(&$db, $table) {
+  function dropTable($db, $table) {
   }
 
-  function createSequence(&$db, $table) {
-    $sequence = $db->getSequenceName($table);
-    $db->query("drop table if exists $sequence");
-    @$db->createSequence($table);
+  function createSequence($db, $table) {
+    // No-op: AUTO_INCREMENT replaces PEAR DB sequences
   }
 
   function logError($log, $file, $line) {
@@ -487,8 +491,9 @@ class DBInstaller {
   }
 
   function createConfigFile() {
-    $path = realpath("..");
-    $file = $path . "/config.php";
+    // dirname(__FILE__) = install/ directory; parent is always the app root
+    $path = dirname(__FILE__) . '/..';
+    $file = realpath($path) . "/config.php";
     error_reporting(0);
     $fp = fopen($file, "w");
     $lt = '<';
@@ -501,64 +506,64 @@ class DBInstaller {
     }
     $buf = $lt . '?' . 'php' . $eol;
     $buf = $buf . "/* the host that the database is running on */$eol";
-    $buf = $buf . "define(\"DBHOST\", \"" . $this->databaseHost . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBHOST\")) define(\"DBHOST\", \"" . $this->databaseHost . "\");$eol$eol";
     $user = $this->dbUserName;
     if(empty($user)) {
       $user = $this->adminUser;
     }
     $buf = $buf . "/* the database user that the application uses to access the database */$eol";
-    $buf = $buf . "define(\"DBUSER\", \"" . $user . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBUSER\")) define(\"DBUSER\", \"" . $user . "\");$eol$eol";
     $password = $this->password;
     if(empty($password)) {
       $password = $this->dbUserName;
     }
     $buf = $buf . "/* the password used to access the database */$eol";
-    $buf = $buf . "define(\"DBPASSWORD\", \"" . $password . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBPASSWORD\")) define(\"DBPASSWORD\", \"" . $password . "\");$eol$eol";
     $buf = $buf . "/* the database name */$eol";
-    $buf = $buf . "define(\"DBNAME\",\"" . $this->databaseName . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"DBNAME\")) define(\"DBNAME\",\"" . $this->databaseName . "\");$eol$eol";
     $buf = $buf . "/* The URI of the application.  This should always end in a '/'.";
     $buf = $buf . "For instance,$eol   if you are running this at the top-level, it would be /.  ";
     $buf = $buf . "If the URL was$eol   www.foo-bar.com/rbook/, the APPROOT would be /rbook/ */$eol";
-    $buf = $buf . "define(\"APPROOT\",\"" . $this->approot . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"APPROOT\")) define(\"APPROOT\",\"" . $this->approot . "\");$eol$eol";
     $buf = $buf . "/* the stylesheet to use (this should reside in ./style */$eol";
-    $buf = $buf . "define(\"STYLESHEET\",\"style.css\");$eol$eol";
+    $buf = $buf . "if (!defined(\"STYLESHEET\")) define(\"STYLESHEET\",\"style.css\");$eol$eol";
     $buf = $buf . "/* whether to display recipe if only one result is returned */$eol";
-    $buf = $buf . "define(\"DISPLAYIFONLYONE\", true);$eol$eol";
+    $buf = $buf . "if (!defined(\"DISPLAYIFONLYONE\")) define(\"DISPLAYIFONLYONE\", true);$eol$eol";
     $buf = $buf . "/* The skin that is being used.  This should be the name of a directory under the skins directory */$eol";
-    $buf = $buf . "define(\"SKIN\",\"" . $this->skin . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"SKIN\")) define(\"SKIN\",\"" . $this->skin . "\");$eol$eol";
     $buf = $buf . "/* the title to be displayed in the title bar and in the header */$eol";
-    $buf = $buf . "define(\"APPTITLE\",\"" . $this->title . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"APPTITLE\")) define(\"APPTITLE\",\"" . $this->title . "\");$eol$eol";
     $buf = $buf . "/* the intial user (not used by app, just for re-install) */$eol";
-    $buf = $buf . "define(\"INITIALUSER\",\"" . $this->initialUser . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"INITIALUSER\")) define(\"INITIALUSER\",\"" . $this->initialUser . "\");$eol$eol";
     $buf = $buf . "/* the intial email (not used by app, just for re-install) */$eol";
-    $buf = $buf . "define(\"INITIALEMAIL\",\"" . $this->initialEmail . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"INITIALEMAIL\")) define(\"INITIALEMAIL\",\"" . $this->initialEmail . "\");$eol$eol";
     $buf = $buf . "/* Maximum number of invitations a user can send (0 to disable) */$eol";
-    $buf = $buf . "define(\"MAXINVITATIONS\", $this->maxInvitations);$eol$eol";
+    $buf = $buf . "if (!defined(\"MAXINVITATIONS\")) define(\"MAXINVITATIONS\", $this->maxInvitations);$eol$eol";
     $buf = $buf . "/* Enable debugging */$eol";
-    $buf = $buf . "define(\"DEBUG\", false);$eol$eol";
+    $buf = $buf . "if (!defined(\"DEBUG\")) define(\"DEBUG\", false);$eol$eol";
     $buf = $buf . "/* Log file path (e.g. /foo/bar/rbook.log) */$eol";
     $buf = $buf . "//define(\"LOG_FILE_PATH\", \"\");$eol$eol";
 	$buf = $buf . "/* To turn on google analytics, uncomment this line and put the value of your google analytics acount */$eol";
 	$buf = $buf . "//define(\"GOOGLE_ANALYTICS\", \"\");$eol$eol";
     $buf = $buf . "/* turn on/off recipe-suggest */$eol";
-    $buf = $buf . "define(\"RECIPESUGGEST\",false);$eol$eol";
+    $buf = $buf . "if (!defined(\"RECIPESUGGEST\")) define(\"RECIPESUGGEST\",false);$eol$eol";
     $buf = $buf . "/* define import drop-zone.   If specified, this will be where$eol";
     $buf = $buf . " * export files will be placed for import into the current system.$eol";
     $buf = $buf . " * If this is not specified, then the Import menu option is not displayed.$eol";
     $buf = $buf . " */$eol";
     if(!empty($this->exportDirectory)) {
-      $buf = $buf . "define(\"IMPORTDIR\", \"" . $this->exportDirectory . "\");$eol$eol";
+      $buf = $buf . "if (!defined(\"IMPORTDIR\")) define(\"IMPORTDIR\", \"" . $this->exportDirectory . "\");$eol$eol";
     } else {
       $buf = $buf . "//define(\"IMPORTDIR\", \"\");$eol$eol";
     }
     $buf = $buf . "/* Path to convert executable program used to scale images to size */$eol";
     if(!empty($this->convertProgram)) {
-      $buf = $buf . "define(\"IMAGEMAGICK\", \"" . $this->convertProgram . "\");$eol$eol";
+      $buf = $buf . "if (!defined(\"IMAGEMAGICK\")) define(\"IMAGEMAGICK\", \"" . $this->convertProgram . "\");$eol$eol";
     }
     $buf = $buf . "/* this can either be member or all.  If it is member only members can view the recipes.*/$eol";
-    $buf = $buf . "define(\"VIEW_POLICY\",\"" . $this->viewPolicy . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"VIEW_POLICY\")) define(\"VIEW_POLICY\",\"" . $this->viewPolicy . "\");$eol$eol";
 	$buf = $buf . "/* The language you want rbook to be displayed in.*/$eol";
-    $buf = $buf . "define(\"LANGUAGE\",\"" . $this->language . "\");$eol$eol";
+    $buf = $buf . "if (!defined(\"LANGUAGE\")) define(\"LANGUAGE\",\"" . $this->language . "\");$eol$eol";
     $buf = $buf . "?$gt";
 
     error_reporting(E_ALL);

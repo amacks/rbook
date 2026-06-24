@@ -36,7 +36,7 @@ class GroceryController extends BaseController {
    * Factory method that creates an image controller.  
    */
 
-  function &newInstance() {
+  static function newInstance() {
 	$controller = new GroceryController("grocery");
 	$controller->set_valid_actions(array("clear", "save", "update", "remove", "index", "save_in_place"));
 	$controller->set_requires_authentication(array("clear", "save", "save_in_place", "update", "remove", "index"));
@@ -48,7 +48,7 @@ class GroceryController extends BaseController {
    */
 
   function save_in_place() {
-	$user =& getUser();
+	$user = getUser();
 	$this->saveCommon($user);
 	echo("SAVED");
   }
@@ -81,13 +81,13 @@ class GroceryController extends BaseController {
 	if(isset($_POST['clear'])) {
 	  $this->activateAction('clear');
 	}
-	$user =& getUser();
+	$user = getUser();
 	$this->saveCommon($user);
 	$this->activateDefault();
   }
 
   function clear() {
-	$user =& getUser();
+	$user = getUser();
 	GroceryList::deleteMultiple(array('userid' => $user->id));
 	$this->activateDefault();
   }
@@ -99,7 +99,7 @@ class GroceryController extends BaseController {
 	$user = getUser();
 	$groceryList = GroceryList::findByUser($user->id);
 	$page_title = getMessage("GroceryList");
-	$modelView =& $this->prepareModelAndView();
+	$modelView = $this->prepareModelAndView();
 	$modelView->assign("selectedTab", "grocery");
 	$modelView->assign("title", $page_title);
 	$modelView->assign("groceryList", $this->buildGroceryList($groceryList));
@@ -113,7 +113,7 @@ class GroceryController extends BaseController {
   function update($item) {
 	$item = $_POST['arg'];
     header("Content-type: text/plain");
-	$user =& getUser();
+	$user = getUser();
 	$list = GroceryList::findByUser($user->id);
 	if(!empty($item)) {
 	  $gi = new GroceryList();

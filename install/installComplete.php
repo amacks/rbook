@@ -30,9 +30,12 @@
 require_once(dirname(__FILE__) . "/../helpers/auth.php");
 require_once(dirname(__FILE__) . "/../helpers/ui.php");
 require_once(dirname(__FILE__) . '/../helpers/resources.php');
+if (file_exists(dirname(__FILE__) . '/../config.php')) {
+    require_once(dirname(__FILE__) . '/../config.php');
+}
 session_start();
 
-$config = $_SESSION['config'];
+$config = $_SESSION['config'] ?? null;
 
 if(!defined("LANGUAGE"))
 {

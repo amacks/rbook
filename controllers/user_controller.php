@@ -37,7 +37,7 @@ class UserController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function &newInstance() {
+  static function newInstance() {
     $controller = new UserController("user");
     $actions = array("validate", "respond", "invite", "process_invite", "retrieve_password", 
                      "forgot","show_login", "edit_profile", "view_profile", "save_profile", 
@@ -67,11 +67,11 @@ class UserController extends BaseController {
     if(isset($_SESSION['redirectto'])) {
       $redirectTo = $_SESSION['redirectto'];
     }
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
 
     $modelView->assign("title", getMessage("Login"));
     $modelView->assign("pageClass", "loginPage");
-    $modelView->assign("userName", $_POST['user']);
+    $modelView->assign("userName", $_POST['user'] ?? '');
     $modelView->assign("action", buildLink("user", "login"));
     if(isset($redirectTo)) {
       $modelView->assign("redirectTo", $redirectTo);
@@ -110,7 +110,7 @@ class UserController extends BaseController {
     $action = $_POST['action'];
     $redirect = true;
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", getMessage("Users"));
     $modelView->assign("pageTitle", getMessage("Users"));
     $modelView->assign("users", $this->buildUserList($users));
@@ -126,7 +126,7 @@ class UserController extends BaseController {
     $qualifiers = array("email" => $_POST['email']);
     $targetUser = User::loadOne($qualifiers);
     if(isset($targetUser)) {
-      $inviter =& getUser();
+      $inviter = getUser();
       $invitation = new Invitation($targetUser->id, $targetUser->id);
 	  $invitation->delete();
 	  $invitation->createDate = null;
@@ -146,7 +146,7 @@ class UserController extends BaseController {
   }
 
   function forgot() {
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", APPTITLE);
     $modelView->assign("pageTitle", getMessage("recoverPassword"));
     $modelView->assign("showNavBar", 0);
@@ -193,7 +193,7 @@ class UserController extends BaseController {
     if(!$this->isPost()) {
       $this->activateDefault();
     }
-    $user =& $_SESSION['profileUser'];
+    $user = $_SESSION['profileUser'];
 
 	// we only modify the things that are relevant to the profile
     $user->name = $_POST['name'];
@@ -247,10 +247,11 @@ class UserController extends BaseController {
   }
 
   function priv_edit_profile($id, $user) {
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", getMessage('editUser'));
     $modelView->assign("action", buildLink("user", "save_profile"));
     $modelView->assign("editprofile", 1);
+    $modelView->assign("newuser", false);
 	$modelView->assign("profile_favorite", $user->favorite);
 	$modelView->assign("profile_website", $user->website);
     $this->prepareUser($user, $modelView);
@@ -270,8 +271,8 @@ class UserController extends BaseController {
   }
 
   function view_profile($username) {
-    $modelView =& $this->prepareModelAndView();
-	$user =& User::loadOne(array('username' => $username));
+    $modelView = $this->prepareModelAndView();
+	$user = User::loadOne(array('username' => $username));
 	if(isset($user)) {
 	  $modelView->assign("profileName", $user->name);
 	  $modelView->assign("profileEmail", $user->email);
@@ -309,7 +310,7 @@ class UserController extends BaseController {
       $editingUser = new User();
     }
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", getMessage('editUser'));
     $modelView->assign("newuser", $editingUser->isNew());
     $modelView->assign("action", buildLink("user", "save"));
@@ -347,7 +348,7 @@ class UserController extends BaseController {
     if(isset($_SESSION['redirectto'])) {
       $redirectTo = $_SESSION['redirectto'];
     }
-    $theUser =& User::loadOne(array('username' => $_POST['user']));
+    $theUser = User::loadOne(array('username' => $_POST['user']));
     if(!isset($theUser)) {
       $this->flash(getMessage("userOrPasswordIncorrect"));
       $this->activateAction("show_login");
@@ -356,11 +357,11 @@ class UserController extends BaseController {
       $this->flash(getMessage("accountDisabled"));
       $this->activateAction("show_login");
     }
-
     if($theUser->validateLogin($_POST['password'])) {
-      $_SESSION['user'] =& $theUser;
-      if($_POST['saveid'] == 'on') {
-        $token = md5(date("Y-m-d h:i:s"));
+      $theUser->upgradePasswordHashIfNeeded($_POST['password']);
+      $_SESSION['user'] = $theUser;
+      if(($_POST['saveid'] ?? '') == 'on') {
+        $token = bin2hex(random_bytes(16));
         setcookie('saveid', $theUser->id, time() + 2592000, APPROOT);
         setcookie('auth',$token, time() + 2592000, APPROOT);
         $theUser->auth = $token;
@@ -373,7 +374,7 @@ class UserController extends BaseController {
     $this->activateController("user", "show_login");
   }
 
-  function &buildUserList(&$uList) {
+  function buildUserList(&$uList) {
     $users = array();
     foreach($uList as $u) {
       $ua = array("name" => $u->name,
@@ -404,7 +405,7 @@ class UserController extends BaseController {
 
   function register() {
     if($this->passedCaptcha()) {
-      $modelView =& $this->prepareModelAndView();
+      $modelView = $this->prepareModelAndView();
       $modelView->assign("title", getMessage("register"));
       $modelView->assign("showNavBar", 0);
       $modelView->assign("pageTitle", getMessage("register"));
@@ -421,7 +422,7 @@ class UserController extends BaseController {
       $this->flash('userNotSet');
       $this->activateDefault();
     }
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", getMessage("registrationComplete"));
     $modelView->assign("showNavBar", 0);
     $modelView->assign("registeredUser", $user);
@@ -445,7 +446,7 @@ class UserController extends BaseController {
   }
 
   function submit_captcha() {
-    $captcha =& $_SESSION['captcha'];
+    $captcha = $_SESSION['captcha'];
     if($_POST['phrase'] == $captcha->getText()) {
       $_SESSION['captcha_passed'] = true;
       $this->activateAction('register');
@@ -456,9 +457,9 @@ class UserController extends BaseController {
   }
 
   function captcha() {
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $captcha = new Captcha();
-    $_SESSION['captcha'] =& $captcha;
+    $_SESSION['captcha'] = $captcha;
 
     $modelView->assign("pageClass", "loginPage");
     $modelView->assign("showNavBar", 0);
@@ -468,7 +469,7 @@ class UserController extends BaseController {
   }
 
   function captcha_image() {
-    $captcha =& $_SESSION['captcha'];
+    $captcha = $_SESSION['captcha'];
     if(!isset($captcha)) {
       trigger_error("captcha not set");
     }
@@ -503,8 +504,8 @@ class UserController extends BaseController {
     $user->save();
     rb_log("User: " . $user->id);
 
-    $inviter =& getUser();
-    $activeUser =& getUser();
+    $inviter = getUser();
+    $activeUser = getUser();
 	$userId = $user->id;
 	// When users register they are basically inviting themselves.
 	if($invite) {
@@ -545,7 +546,7 @@ class UserController extends BaseController {
       $this->flash(getMessage('invitationUsed'));
       $this->activateController("recipe", "index");
     } else if($_POST['code']) {
-      $targetUser =& User::loadOne(array("email" => $_POST['email']));
+      $targetUser = User::loadOne(array("email" => $_POST['email']));
       if(isset($targetUser)) {
         if($invitation->invitee == $targetUser->id) {
           // setting the accept date prevents it from being reused.
@@ -565,7 +566,7 @@ class UserController extends BaseController {
       }
     }
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("invitation_code", $code);
     $modelView->assign("title", getMessage("VerifyInvitation"));
     $modelView->assign("pageTitle", getMessage("VerifyInvitation"));
@@ -579,7 +580,7 @@ class UserController extends BaseController {
       $this->activeDefault();
     }
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", getMessage("sendInvitation"));
     $modelView->assign("pageTitle", getMessage("sendInvitation"));
     $modelView->display(getFullTemplateName('invite'));

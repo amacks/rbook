@@ -5,7 +5,7 @@
 </tr>
 <tr>
 <td class="loginTable"><label for="passwordField">{getMessage key=Password}</label>:</td>
-<td class="loginTable"><input size="30" type="password" name="password" id="passwordField"/></td>
+<td class="loginTable"><input size="30" maxlength="{$user_password_length}" type="password" name="password" id="passwordField"/></td>
 </tr>
 </table>
 <br/>

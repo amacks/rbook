@@ -47,7 +47,10 @@ class BaseController {
    * authentication
    */
 
-  var $requireAuth;
+  public $requireAuth;
+  public $currentAction;
+  public $requireAdmin;
+  public $validActions;
 
   /**
    * @var string The name of the controller.  This is passed into the
@@ -57,14 +60,14 @@ class BaseController {
    * an error to be triggered.
    */
 
-  var $name;
+  public $name;
   
   /**
    * @var string the default action to call on the controller if
    * activateDefault() is called.  This is set to 'index' by default.
    */
 
-  var $defaultAction;
+  public $defaultAction;
 
   /**
    * @var bool true if all actions in the controller should be
@@ -72,10 +75,10 @@ class BaseController {
    * default.
    */
 
-  var $requiresSession;
+  public $requiresSession;
 
 
-  function BaseController($name = null, $requires_session = true) {
+  function __construct($name = null, $requires_session = true) {
     $this->name = $name;
     $this->defaultAction = "index";
 	$this->requiresSession = $requires_session;
@@ -90,7 +93,7 @@ class BaseController {
   }
 
   function getPageErrors() {
-	return $_SESSION['pageErrors'];
+	return $_SESSION['pageErrors'] ?? null;
   }
 
 
@@ -110,7 +113,7 @@ class BaseController {
 
   function activateDefault() {
     if(empty($this->defaultAction)) {
-      trigger_errror("No default action specified for controller", E_USER_ERROR);
+      trigger_error("No default action specified for controller", E_USER_ERROR);
     }
     $this->activateAction($this->defaultAction);
   }
@@ -241,26 +244,24 @@ class BaseController {
    * are need on all pages.
    */
   
-  function &prepareModelAndView() {
+  function prepareModelAndView() {
 	$smarty = new Smarty();
-	$smarty->register_resource('skin', 
-							   array("skin_get_template",
-									 "skin_get_timestamp",
-									 "skin_is_secure",
-									 "skin_is_trusted"));
-	$smarty->compile_check = true;
+	$smarty->registerResource('skin', new SkinResource());
+	$smarty->setCompileCheck(true);
 	$smarty->assign("appTitle", APPTITLE);
 	$smarty->debugging = false;
-	$smarty->config_dir = SKINDIR . '/configs';
-	
-	$smarty->template_dir = getTemplateDir();
-	$smarty->compile_dir = SKINDIR . '/templates_c';
-	if(!file_exists($smarty->compile_dir)) {
-	  mkdir($smarty->compile_dir);
+	$smarty->setConfigDir(SKINDIR . '/configs');
+	$smarty->setTemplateDir(getTemplateDir());
+	$smarty->setCompileDir(SKINDIR . '/templates_c');
+	if(!file_exists(SKINDIR . '/templates_c')) {
+	  mkdir(SKINDIR . '/templates_c');
 	}
-	$smarty->plugin_dir = ROOT_DIRECTORY . '/plugins';
+	$smarty->addPluginsDir(ROOT_DIRECTORY . '/plugins');
 	$smarty->assign("controller", $this->name);
 	$smarty->assign("action", $this->currentAction);
+	$smarty->assign("pageClass", "");
+	$smarty->assign("pageError", null);
+	$smarty->assign("userName", "");
 	$smarty->assign("showrss", "false");
 	$smarty->assign("stylesheet", 'style/style.css');
 	$smarty->assign("stylesheetPrint", "style/style-print.css");
@@ -269,7 +270,7 @@ class BaseController {
 	  $categories = $_SESSION['categories'];
 	}
 	if(!isset($categories)) {
-	  $categories =& Category::loadMultiple(null, null);
+	  $categories = Category::loadMultiple(null, null);
 	  $_SESSION['categories'] = $categories;
 	} 
 	$smarty->assign("categories", $this->buildCategoryList($categories));
@@ -277,12 +278,12 @@ class BaseController {
 	  $recipecount = $_SESSION['recipecount'];
 	}
 	if(!isset($recipecount)) {
-	  $recipecount =& Recipe::getRecipeCount();
+	  $recipecount = Recipe::getRecipeCount();
 	  $_SESSION['recipecount'] = $recipecount;
 	} 
 	$smarty->assign("recipecount", $recipecount);
 	
-	$user = $_SESSION['user'];
+	$user = $_SESSION['user'] ?? null;
 	$this->prepareUser($user, $smarty);
 	$loggedIn = false;
 	if(!isset($user) && isset($_COOKIE['saveid']) && strlen($_COOKIE['saveid'])) {
@@ -381,7 +382,7 @@ class BaseController {
    * all the categories defined in the system.
    */
   
-  function &buildCategoryList(&$categories) {
+  function buildCategoryList(&$categories) {
 	$cats = array();
 	foreach($categories as $cat) {
 		
@@ -394,6 +395,9 @@ class BaseController {
   }
 
   function prepareUser(&$user, &$smarty) {
+    if (!$user) {
+      return;
+    }
 	$smarty->assign("user_username", $user->username);
 	$smarty->assign("user_name", $user->name);
 	$smarty->assign("user_email", $user->email);
@@ -411,7 +415,7 @@ class BaseController {
    * converted to html tags.
    */
   
-  function &buildDisplayableRecipe(&$recipe, $applyFormatting) {
+  function buildDisplayableRecipe(&$recipe, $applyFormatting) {
 	if($recipe == null) {
 	  return array();
 	}
@@ -464,7 +468,7 @@ class BaseController {
 			   );
 			   
 	// Multiple images possible.
-	$imgs =& $recipe->images;
+	$imgs = $recipe->images;
 	if(isset($imgs) && count($imgs) > 0) {
 	  $images = array();
 	  for($i = 0; $i < count($imgs); $i++) {

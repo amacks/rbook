@@ -1,3 +1,36 @@
-To install:
+To install rbook:
 
-Go to http://<yourbox>/<installdir>/install/index.php and fill out the form and follow the directions.
+Requirements
+------------
+- PHP 8.1 or higher (PHP 8.2+ recommended)
+- MySQL 5.7+ or MariaDB 10.4+
+- PHP extensions: pdo, pdo_mysql, mbstring, gd (optional, for image support)
+- Composer (https://getcomposer.org)
+
+First-time installation
+-----------------------
+1. Install PHP dependencies:
+
+     composer install
+
+2. Go to http://<yourbox>/<installdir>/install/index.php and fill out the
+   form and follow the directions.
+
+Upgrading from a previous rbook installation
+--------------------------------------------
+If you are upgrading from a PHP5 version of rbook that used PEAR DB:
+
+1. Install PHP dependencies:
+
+     composer install
+
+2. Run the database migration script to add AUTO_INCREMENT to all id
+   columns and widen the password column:
+
+     mysql -u <user> -p <database> < install/migrate_pear_to_pdo.sql
+
+   This is a one-time, non-destructive migration. Existing data is preserved.
+
+3. Existing user passwords (stored as MD5 hashes) will be automatically
+   upgraded to bcrypt on each user's next successful login. No manual
+   password reset is required.

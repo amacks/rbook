@@ -5,7 +5,7 @@ require_once('../install/mysql_db_installer.php');
 class TestUtils {
 
 
-	function &setupTestDatabase() {
+	function setupTestDatabase() {
 		$installer = new MysqlDBInstaller();
 		$installer->databaseName = "rbook_test";
 		$installer->adminUser = "root";

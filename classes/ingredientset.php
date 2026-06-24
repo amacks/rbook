@@ -29,12 +29,12 @@
 
 class IngredientSet extends BaseRecord {
 
-    var $name;
-    var $rows;
-    var $id;
+    public $name;
+    public $rows;
+    public $id;
 
-    function IngredientSet() {
-        $this->BaseRecord();
+    function __construct() {
+        parent::__construct();
         $this->name = "Ingredients";
         $this->rows = array();
         $this->id = "c" . microtime();
@@ -55,29 +55,21 @@ class IngredientSet extends BaseRecord {
     }
 
     function dbCreateNew(&$db, $recipe, $orderid) {
-        $id = $db->nextId("ingredientsets");
-        $this->runQuery($db, "INSERT INTO ingredientsets (id, name, recipeid, orderid) VALUES (?, ?, ?, ?)",
-               array($id, $this->name, $recipe->id, $orderid));
-        $this->id = $id;
+        $this->runQuery($db, "INSERT INTO ingredientsets (name, recipeid, orderid) VALUES (?, ?, ?)",
+               array($this->name, $recipe->id, $orderid));
+        $this->id = $db->lastInsertId();
         $this->writeIngredients($db);
 
         return true;
     }
 
     function writeIngredients(&$db) {
-        $query = "INSERT INTO ingredients (id, setid, amount, description, orderid) values (?, ?, ?, ?, ?)";
-        $statement =& $db->prepare($query);
+        $query = "INSERT INTO ingredients (setid, amount, description, orderid) values (?, ?, ?, ?)";
+        $stmt = $db->prepare($query);
         for($i = 0; $i < count($this->rows); $i++) {
             $ing = $this->rows[$i];
-            $iid = $db->nextId("ingredients");
-            $values = array($iid, $this->id, $ing->amount, $ing->description, $ing->order);
-            $rs = $db->execute($statement, $values);
-			if(PEAR::isError($rs)) {
-                if(defined("DEBUG_SQL")) {
-                    error_log("Query: " . $query . ", values: " . implode(":", $values));
-                }
-			    die($rs->getMessage());
-            }
+            $values = array($this->id, $ing->amount, $ing->description, $ing->order);
+            $db->execute($stmt, $values);
         }
     }
 

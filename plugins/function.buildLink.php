@@ -29,7 +29,7 @@
  * @return string|null
  */
 
-function smarty_function_buildLink($params, &$smarty) {
+function smarty_function_buildLink($params, $template) {
   $url = buildLink($params['controller'], $params['action'], $params['arg']);
   if("true" == $params['cache_defeat']) {
 	$url = $url . "?" . time();

@@ -32,26 +32,26 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class CommentFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new Comment();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "comments";
   }
 }
 
 class Comment extends BaseRecord {
-  var $recipeid;
-  var $userid;
-  var $createDate;
-  var $modifiedDate;
-  var $comment;
-  var $rating;
-  var $postDate;
+  public $recipeid;
+  public $userid;
+  public $createDate;
+  public $modifiedDate;
+  public $comment;
+  public $rating;
+  public $postDate;
 
-  function Comment() {
-    $this->BaseRecord("comments");
+  function __construct() {
+    parent::__construct("comments");
     $this->postDate = date("y-m-d H:i:s");
   }
         
@@ -66,17 +66,16 @@ class Comment extends BaseRecord {
   }
 
   function dbCreateNew() {
-    $db =& $this->getDb();
-    $id = $db->nextId("comments");
-    $this->runQuery($db, "insert into comments (id, recipeid, userid, rating, postdate, modifieddate, createdate, comment) values (?, ?, ?, ?,  ?, now(), now(), ?)", array($id, $this->recipeid, $this->userid, $this->rating, $this->postDate, $this->comment));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into comments (recipeid, userid, rating, postdate, modifieddate, createdate, comment) values (?, ?, ?, ?,  ?, now(), now(), ?)", array($this->recipeid, $this->userid, $this->rating, $this->postDate, $this->comment));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
-    $this->id = $id;
   }
   function remove($db = null) {
     $cascade = isset($db);
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $this->runQuery($db, "delete from comments where id = ?", array($this->id));
     if(!$cascade) {
@@ -84,11 +83,11 @@ class Comment extends BaseRecord {
       $db->disconnect();
     }
   }
-  function &findByRecipe($recipeid) {
+  public static function findByRecipe($recipeid) {
     return Comment::loadMultiple(array('recipeid' => $recipeid));
   }
 
-  function &loadOne($qualifiers) {
+  public static function loadOne($qualifiers) {
     $comments = Comment::loadMultiple($qualifiers, 1);
     if(count($comments)) {
       return $comments[0];
@@ -96,11 +95,11 @@ class Comment extends BaseRecord {
     return null;
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "comments");
   }
 
-  function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new CommentFactory(), $qualifiers, $limit, $db);
   }
 

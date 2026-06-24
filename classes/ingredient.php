@@ -28,8 +28,8 @@
  */
 
 class Ingredient  {
-  var $order;
-  var $amount;
-  var $description;
+  public $order;
+  public $amount;
+  public $description;
 }
 ?>

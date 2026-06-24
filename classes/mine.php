@@ -29,14 +29,13 @@
 
 
 class Mine extends BaseRecord {
-  var $userid;
-  var $recipeid;
-  function Mine() {
-    $this->BaseRecord();
+  public $userid;
+  public $recipeid;
+  function __construct() {
+    parent::__construct();
   }
 
-  function save() {
-    $db =& $this->getDb();
+  function save($db = null) {
     $this->runQuery($db, "insert into mine (userid, recipeid) values (?, ?)", array($this->userid, $this->recipeid));
 
     $db->commit();

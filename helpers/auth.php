@@ -47,7 +47,11 @@ function validatePassword() {
     return null;
   }
 
-  $theUser = User::loadOne(array('id' => intval($_SESSION['user']->id)));
+  $user = $_SESSION['user'] ?? null;
+  if(!$user) {
+    return "The supplied password is incorrect";
+  }
+  $theUser = User::loadOne(array('id' => intval($user->id)));
   if(!isset($theUser)) {
     return "The supplied password is incorrect";
   } 
@@ -81,9 +85,8 @@ function isLoggedIn() {
  */
 
 function isAdminUser() {
-  $user = $_SESSION['user'];
-  return isLoggedIn() && $_SESSION['user']->admin;
-
+  $user = $_SESSION['user'] ?? null;
+  return $user !== null && (bool)$user->admin;
 }
 
 /**
@@ -91,8 +94,8 @@ function isAdminUser() {
  */
 
 function isReadonlyUser() {
-  $user = $_SESSION['user'];
-  return isLoggedIn() && $_SESSION['user']->readonly;
+  $user = $_SESSION['user'] ?? null;
+  return $user !== null && (bool)$user->readonly;
 }
 
 /**
@@ -144,7 +147,11 @@ function loginAndRedirectToCurrentPage() {
  */
 
 function editableByCurrentUser($recipe) {
-  return ($recipe->submittedById == $_SESSION['user']->id) || $_SESSION['user']->admin;
+  $user = $_SESSION['user'] ?? null;
+  if(!$user) {
+    return false;
+  }
+  return ($recipe->submittedById == $user->id) || $user->admin;
 }
 
 function calculateRating(&$comments, &$rating, &$ratingHits) {
@@ -164,24 +171,24 @@ function calculateRating(&$comments, &$rating, &$ratingHits) {
 	$rating = round($rating, 1);
 }
 
-function setUser(&$user) {
-  $_SESSION['user'] =& $user;
+function setUser($user) {
+  $_SESSION['user'] = $user;
 }
 
 /**
  * Returns the current user logged in.
  */
 
-function &getUser() {
-  return $_SESSION['user'];
+function getUser() {
+  return $_SESSION['user'] ?? null;
 }
 
-function &getActiveRecipe() {
-  return $_SESSION['recipe'];
+function getActiveRecipe() {
+  return $_SESSION['recipe'] ?? null;
 }
 
 function setActiveRecipe(&$recipe) {
-  $_SESSION['recipe'] &= $recipe;
+  $_SESSION['recipe'] = $recipe;
 }
 
 

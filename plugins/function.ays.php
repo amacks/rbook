@@ -35,7 +35,7 @@
  * @return string|null
  */
 
-function smarty_function_ays($params, &$smarty) {
+function smarty_function_ays($params, $template) {
 	$foo = isset($params['evt']) ? $params['evt'] : ("'" . $params['url'] . "'");
 
 	$val = '<script type="text/javascript">' . "\n" .

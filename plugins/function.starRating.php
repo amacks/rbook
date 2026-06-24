@@ -28,7 +28,7 @@
  * @return string|null
  */
 
-function smarty_function_starRating($params, &$smarty) {
+function smarty_function_starRating($params, $template) {
   $numStars = $params['number'];
   $dec = ceil($numStars);
   $frac = $dec - $numStars;

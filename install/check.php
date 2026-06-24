@@ -85,20 +85,18 @@ if(!file_exists($foo)) {
 }
 
 /******************************************************************************
- * Check for the inclusion of PEAR DB
+ * Check for PDO MySQL support (replaces PEAR DB)
  *****************************************************************************/
 
-include 'DB.php';
-
-if(!defined("DB_OK")) {
+if(!extension_loaded('pdo_mysql') && !extension_loaded('PDO')) {
   $errors[] = "E|".getMessage('errPearDbNotFound')."|".getMessage("pearDbNotFound").$f;
 }
 
 /******************************************************************************
- * Check that mysql extension is installed
+ * Check that pdo_mysql extension is installed
  *****************************************************************************/
 
-if(!extension_loaded('mysql')) {
+if(!extension_loaded('pdo_mysql')) {
   $errors[] = "E|".getMessage('mysqlNotFound')."|".getMessage("mysqlNotFound").$f;
 }
 

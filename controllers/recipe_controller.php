@@ -38,7 +38,7 @@ class RecipeController extends BaseController {
    * Factory method that creates a recipe controller.
    * @static  
    */
-  function &newInstance() {
+  static function newInstance() {
     $controller = new RecipeController("recipe");
 	$valid = array("author", "create", "create_comment", "delete", "delete", 
 				  "save", "edit", "add_picture", "remove_picture", "remove_pictures",
@@ -75,7 +75,7 @@ class RecipeController extends BaseController {
       header("Location: " . APPROOT . "/install/");
       exit();
     }
-	$sortType = $_COOKIE['sortType'];
+	$sortType = $_COOKIE['sortType'] ?? null;
 	$results = null;
 	if(isset($sortType) && $sortType == 'popular') {
 	  $results = Recipe::searchForMostPopular(RESULTSONHOMEPAGE);
@@ -85,7 +85,7 @@ class RecipeController extends BaseController {
 	}
     unset($_SESSION['lastsearch']);
     unset($_SESSION['recipe']);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", APPTITLE);
     $rset = new ResultSet(RESULTSONHOMEPAGE, $results);
     $rset->name = getMessage("mostRecentAdditions");
@@ -112,7 +112,7 @@ class RecipeController extends BaseController {
     $comments = Comment::findByRecipe($recipe->id);
     $page_title = $recipe->title;
     $hiliteCategory = $recipe->categoryName;
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
 	$modelView->assign("hasComments", count($comments));
     $modelView->assign("title", $recipe->title);
     $modelView->assign("recipe", $this->buildDisplayableRecipe($recipe, true));
@@ -195,7 +195,7 @@ class RecipeController extends BaseController {
       $this->flash(getMessage('invalidAction'));
       $this->activateDefault();
     }
-    $user =& getUser();
+    $user = getUser();
     
     $recipe = new Recipe();
     $recipe->submittedById = $user->id;
@@ -217,10 +217,10 @@ class RecipeController extends BaseController {
       gotoReferrer();
     }
 
-    $recipe =& $this->getRecipe(false);
+    $recipe = $this->getRecipe(false);
 
     if($this->isPost()) {
-      $user =& getUser();
+      $user = getUser();
       $comment = new Comment();
       $comment->userid = $user->id;
       $comment->recipeid = $recipe->id;
@@ -258,14 +258,14 @@ class RecipeController extends BaseController {
     }
     
     $comment = Comment::loadOne(array("id" => $commentId));
-    $user =& getUser();
+    $user = getUser();
     // verify the user is either the owner of the comment or an admin user
     if($user->id != $comment->userid && !isAdminUser()) {
       $this->flash(getMessage("noPermissionToDeleteComment"));
       $this->activateDefault();
     }
     $comment->remove();
-	$recipe =& $this->getRecipe(false);
+	$recipe = $this->getRecipe(false);
 	$comments = Comment::findByRecipe($recipe->id);
       
 	calculateRating($comments, $rating, $ratingHits);
@@ -282,14 +282,14 @@ class RecipeController extends BaseController {
    */
 
   function save_picture() {
-    $recipe =& $this->getRecipe(false);
+    $recipe = $this->getRecipe(false);
     if($this->isPost()) {
       if(strlen($_POST['cancel']) > 3) {
         $this->activateDefault();
       } else {
         if(is_uploaded_file($_FILES['imagefile']['tmp_name'])) {
           $image = new Image();
-          $user =& getUser();
+          $user = getUser();
           
           $image->caption = $_POST['caption'];
           $image->recipeid = $recipe->id;
@@ -329,7 +329,7 @@ class RecipeController extends BaseController {
   }
   
   function remove_picture($id = null) {
-    $recipe =& $this->getRecipe(true);
+    $recipe = $this->getRecipe(true);
     if (isset($id)) {
 	   // Just delete a single picture
 	   $recipe->removeImage($id);
@@ -342,7 +342,7 @@ class RecipeController extends BaseController {
   
   function remove_pictures() {
     $recipe = $this->getRecipe(false);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", $recipe->title);
     $modelView->assign("hiliteCategory", $recipe->categoryName);
     $modelView->assign("recipe", $this->buildDisplayableRecipe($recipe, false));
@@ -351,7 +351,7 @@ class RecipeController extends BaseController {
 
   function add_picture() {
     $recipe = $this->getRecipe(false);
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", $recipe->title);
     $modelView->assign("caption", $_POST['caption']);
     $modelView->assign("hiliteCategory", $recipe->categoryName);
@@ -378,7 +378,7 @@ class RecipeController extends BaseController {
    * Deletes the active recipe.
    */
   function delete() {
-    $recipe =& $this->getRecipe(true);
+    $recipe = $this->getRecipe(true);
     if(isset($recipe)) {
       $recipe->remove();
 	  unset($_SESSION['categories']);
@@ -391,9 +391,9 @@ class RecipeController extends BaseController {
    * session.
    */
   function results($page) {
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $rset = $_SESSION['results'];
-    $_SESSION['lastsearch'] = $REQUEST_URI;
+    $_SESSION['lastsearch'] = $_SERVER['REQUEST_URI'];
     $rset->page = intval($page);
     $rset->constructPayload($page, null, $modelView);
 	$modelView->assign("title", $rset->name);
@@ -405,11 +405,11 @@ class RecipeController extends BaseController {
    */
   function author($authorId) {
     $results = Recipe::searchByAuthor($authorId);
-    $u =& User::loadOne(array("id" => $authorId));
+    $u = User::loadOne(array("id" => $authorId));
     $rset = new ResultSet(RESULTS_PER_PAGE, $results);
     $rset->name = getMessage("recipesBy") . $u->name;
     $rset->displayResultCount = false;
-    $_SESSION['results'] =& $rset;
+    $_SESSION['results'] = $rset;
     $this->activateController("recipe", "results", "1");
   }
 
@@ -421,29 +421,30 @@ class RecipeController extends BaseController {
     $rset->name = $cat->name;
     $rset->displayResultCount = false;
 	$rset->fromPage = 'category';
-    $_SESSION['results'] =& $rset;
+    $_SESSION['results'] = $rset;
     $this->activateController("recipe", "results", "1");
   }
 
   function search() {
     unset($_SESSION['results']);
-    $results = Recipe::searchByKeyword($_GET['search']);
+    $searchTerm = $_GET['search'] ?? '';
+    $results = Recipe::searchByKeyword($searchTerm);
     if(isset($results) && count($results) == 1 && (DISPLAYIFONLYONE === true)) {
       $this->activateController("recipe", "view", $results[0]->recipeId);
     }
     $rset = new ResultSet(RESULTS_PER_PAGE, $results);
-    $_SESSION['results'] =& $rset;
+    $_SESSION['results'] = $rset;
 	$rset->fromPage = 'search';
-	$rset->name = $_GET['search'];
+	$rset->name = $searchTerm;
     $rset->displayResultCount = false;
     $this->activateController("recipe", "results", "1");
   }
 
-  function &getRecipe($editable = false, $id = null) {
+  function getRecipe($editable = false, $id = null) {
     if(!empty($id)) {
       $recipe = Recipe::load($id);
     } else {
-      $recipe =& getActiveRecipe();
+      $recipe = getActiveRecipe();
     }
     
     if(!isset($recipe)) {
@@ -462,7 +463,7 @@ class RecipeController extends BaseController {
      * Saves a recipe. This method is called from the UI.
      */
   function save() {
-    $recipe =& $this->getRecipe(true);
+    $recipe = $this->getRecipe(true);
 	if(isset($_POST['discardAndView'])) {
 	  if($recipe->isNew()) {
 		$this->activateAction("index");
@@ -501,7 +502,7 @@ class RecipeController extends BaseController {
       $catNames[] = $cat->name;
     }
     
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", $recipe->title);
     $modelView->assign("hiliteCategory", $recipe->categoryName);
     $modelView->assign("recipe", $this->buildDisplayableRecipe($recipe, false));

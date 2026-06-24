@@ -88,12 +88,7 @@ function dispatch_error_handler($errno, $errstr, $errfile, $errline) {
   exit();
 }
 
-$version_breakdown = explode(".", phpversion());
-
-// The error handler doesn't like the second parameter in PHP4
-if($version_breakdown[0] > 4) {
-	set_error_handler("dispatch_error_handler", E_USER_ERROR | E_CORE_ERROR);
-} 
+set_error_handler("dispatch_error_handler", E_USER_ERROR | E_CORE_ERROR);
 
 // Load the controller class
 require_once(dirname(__FILE__) . '/controllers/' . $controller . '_controller.php');
@@ -119,7 +114,7 @@ if(DEBUG) {
 $controllerInstance->before_execute($func);
 
 // execute the method
-call_user_func(array(&$controllerInstance, $func), $arg);
+call_user_func(array($controllerInstance, $func), $arg);
 
 
 

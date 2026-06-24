@@ -37,7 +37,7 @@ class RssController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function &newInstance() {
+  static function newInstance() {
 	$controller = new RssController("rss", false);
 	$controller->set_valid_actions(array("index", "atom", "atom_user"));
 	return $controller;
