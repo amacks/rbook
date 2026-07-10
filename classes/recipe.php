@@ -607,6 +607,7 @@ class Recipe extends BaseRecord {
 
   public static function processResults($db, $res) {
     $resultSet = array();
+    $row = null;
     while ($res->fetchInto($row,  DB_FETCHMODE_ASSOC)) {
       $resultSet[] = new SearchResult($row['title'], buildViewUrl($row['recipeid']),
                                       $row['recipeid'], $row['uname'], $row['username'],
