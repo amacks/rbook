@@ -534,7 +534,7 @@ class Recipe extends BaseRecord {
 
   public static function searchByAuthor($authorId) {
     $db = BaseRecord::getDb();
-    $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
+    $query = "SELECT distinct recipes.id as recipeid,recipes.name as title,recipes.description," .
       "users.name as uname, users.id as uid, users.username as username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
       "where users.id = ? and recipes.submittedby = users.id " .
       "order by recipes.createdate desc";
@@ -544,7 +544,7 @@ class Recipe extends BaseRecord {
 
   public static function searchByMostRecentAndAuthor($limit, $authorId) {
     $db = BaseRecord::getDb();
-    $query = "SELECT distinct recipes.id as recipeid,recipes.name as title," .
+    $query = "SELECT distinct recipes.id as recipeid,recipes.name as title,recipes.description," .
       "users.name as uname, users.id as uid, users.username, recipes.createdate as cd, recipes.cached_rating, recipes.cached_ratinghits from recipes,users ".
       "where users.id = ? and recipes.submittedby = users.id " .
       "order by recipes.createdate desc";
@@ -607,7 +607,6 @@ class Recipe extends BaseRecord {
 
   public static function processResults($db, $res) {
     $resultSet = array();
-    //$row = null;
     while ($res->fetchInto($row,  DB_FETCHMODE_ASSOC)) {
       $resultSet[] = new SearchResult($row['title'], buildViewUrl($row['recipeid']),
                                       $row['recipeid'], $row['uname'], $row['username'],

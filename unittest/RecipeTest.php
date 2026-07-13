@@ -4,6 +4,8 @@ require_once(dirname(__FILE__) . '/../install/db_installer.php');
 require_once(dirname(__FILE__) . '/../install/mysql_db_installer.php');
 require_once(dirname(__FILE__) . '/../classes/base_record.php');
 require_once(dirname(__FILE__) . '/../classes/recipe.php');
+require_once(dirname(__FILE__) . '/../classes/search_result.php');
+require_once(dirname(__FILE__) . '/../helpers/ui.php');
 
 class RecipeTest extends BaseDBTest {
 
@@ -54,5 +56,25 @@ class RecipeTest extends BaseDBTest {
 		$this->assertTrue($r2->id > $firstId);
 		$r2 = Recipe::load($r2->id);
 		$this->assertEquals("bar note", $r2->note);
+	}
+
+	function testSearchByAuthorIncludesDescription() {
+		$r = $this->createFooRecipe();
+		$r->description = "foo description";
+		$r->save();
+
+		$results = Recipe::searchByAuthor($r->submittedById);
+		$this->assertCount(1, $results);
+		$this->assertEquals("foo description", $results[0]->description);
+	}
+
+	function testSearchByMostRecentAndAuthorIncludesDescription() {
+		$r = $this->createFooRecipe();
+		$r->description = "foo description";
+		$r->save();
+
+		$results = Recipe::searchByMostRecentAndAuthor(10, $r->submittedById);
+		$this->assertCount(1, $results);
+		$this->assertEquals("foo description", $results[0]->description);
 	}
 }
