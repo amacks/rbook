@@ -57,7 +57,7 @@ class GroceryController extends BaseController {
 	GroceryList::deleteMultiple(array('userid' => $user->id));
 	$i = 0;
 	for($i = 0; ; $i++) {
-	  $f = $_REQUEST['gi' . $i];
+	  $f = $_REQUEST['gi' . $i] ?? null;
 	  if(!empty($f)) {
 		$gi = new GroceryList();
 		$gi->description = $f;
