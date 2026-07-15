@@ -71,7 +71,7 @@
 </div>
 
 <div class="buttonRow rightButtonRow" >
-{if not $isNew}<input name="discardAndView" type="submit" value="{getMessage key=DiscardAndView}"/>{/if}
+{if not $recipe.isNew}<input name="discardAndView" type="submit" value="{getMessage key=DiscardAndView}"/>{/if}
 
 <input name="saveAndEdit" type="submit" value="{getMessage key=Save}"/>
 

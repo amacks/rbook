@@ -448,6 +448,7 @@ class BaseController {
 			   "id" => $recipe->id,
 			   "cooktime" => $recipe->cooktime,
 			   "preptime" => $recipe->preptime,
+			   "preheat" => $recipe->preheat,
 			   "cooktimePeriod" => toPeriod($recipe->cooktime),
 			   "preptimePeriod" => toPeriod($recipe->preptime),
 			   "totaltimePeriod" => toPeriod($recipe->getTotalTime()),
@@ -485,10 +486,6 @@ class BaseController {
 	}
 	if(!empty($recipe->description)) {
 	  $r['description'] = ($applyFormatting) ? formatForview($recipe->description) : $recipe->description;
-	}
-	
-	if(!empty($recipe->preheat)) {
-	  $r['preheat'] = $recipe->preheat;
 	}
 	
 	if(!empty($recipe->source)) {
