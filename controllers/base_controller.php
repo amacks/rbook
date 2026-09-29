@@ -368,11 +368,13 @@ class BaseController {
 
   function buildGroceryList(&$groceryitems) {
 	$items = array();
-	foreach($groceryitems as $item) {
-	  $c = array("id" => $item->id,
-				 "description" => $item->description,
-				 "order" => $item->orderid);
-	  $items[] = $c;
+	if(isset($groceryitems)) {
+	  foreach($groceryitems as $item) {
+		$c = array("id" => $item->id,
+				   "description" => $item->description,
+				   "order" => $item->orderid);
+		$items[] = $c;
+	  }
 	}
 	return $items;
   }
