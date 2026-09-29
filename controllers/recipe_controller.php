@@ -108,7 +108,10 @@ class RecipeController extends BaseController {
 	}
     $_SESSION['recipe'] = $recipe;
     $user = getUser();
-    $groceryList = GroceryList::findByUser($user->id);
+    $groceryList = null;
+    if(isset($user)) {
+      $groceryList = GroceryList::findByUser($user->id);
+    }
     $comments = Comment::findByRecipe($recipe->id);
     $page_title = $recipe->title;
     $hiliteCategory = $recipe->categoryName;
