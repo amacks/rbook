@@ -20,17 +20,14 @@
 
 /* the version of rbook  */
 define("RBOOK_VERSION", "2.4");
-require_once('DB.php');
+require_once(dirname(__FILE__) . '/vendor/autoload.php');
+require_once(dirname(__FILE__) . '/helpers/db.php');
 require_once(dirname(__FILE__) . '/helpers/resources.php');
-require_once(dirname(__FILE__) . '/extlib/Smarty/Smarty.class.php');
-require_once(dirname(__FILE__) . '/extlib/Smarty/internals/core.write_file.php');
+require_once(dirname(__FILE__) . '/helpers/skin_resource.php');
 require_once(dirname(__FILE__) . '/config.php');
 define("ROOT_DIRECTORY", dirname(__FILE__));
-$version_breakdown = explode(".", phpversion());
-if($version_breakdown[0] > 4) {
-  define("MUA_ENABLED", true);
-  require_once(dirname(__FILE__) . '/extlib/MobileUserAgent.php');
-}
+define("MUA_ENABLED", true);
+require_once(dirname(__FILE__) . '/extlib/MobileUserAgent.php');
 if(!defined("SKIN")) {
   define("SKIN", "default");
 }

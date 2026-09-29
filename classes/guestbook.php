@@ -32,23 +32,23 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class GuestbookFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new Guestbook();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "guestbook";
   }
 }
 
 class Guestbook extends BaseRecord {
-  var $id;
-  var $name;
-  var $comment;
-  var $postdate;
+  public $id;
+  public $name;
+  public $comment;
+  public $postdate;
 
-  function Guestbook() {
-    $this->BaseRecord("guestbook");
+  function __construct() {
+    parent::__construct("guestbook");
   }
         
   function init(&$row) {
@@ -64,18 +64,17 @@ class Guestbook extends BaseRecord {
 	else
 		$pdate = date("YmdHis", time());
 		
-    $db =& $this->getDb();
-    $id = $db->nextId("guestbook");
-    $this->runQuery($db, "insert into guestbook (id, name, comment, postdate) values (?, ?, ?, ?)",
-	  array($id, $this->name, $this->comment, $pdate));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into guestbook (name, comment, postdate) values (?, ?, ?)",
+	  array($this->name, $this->comment, $pdate));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
-    $this->id = $id;
   }
   function remove($db = null) {
     $cascade = isset($db);
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $this->runQuery($db, "delete from guestbook where id = ?", array($this->id));
     if(!$cascade) {
@@ -84,7 +83,7 @@ class Guestbook extends BaseRecord {
     }
   }
 
-  function &loadOne($qualifiers) {
+  public static function loadOne($qualifiers) {
     $guestbook = Guestbook::loadMultiple($qualifiers, 1);
     if(count($guestbook)) {
       return $guestbook[0];
@@ -92,11 +91,11 @@ class Guestbook extends BaseRecord {
     return null;
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "guestbook");
   }
 
-  function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new GuestbookFactory(), $qualifiers, $limit, $db, "postdate DESC");
   }
 

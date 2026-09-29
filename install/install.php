@@ -39,8 +39,6 @@ if(!defined("LANGUAGE")) {
 }
 require_once(dirname(__FILE__) . '/../helpers/resources.php');
 
-require_once('DB.php');
-
 require_once('db_installer.php');
 require_once('mysql_db_installer.php');
 $installer = new MysqlDBInstaller();

@@ -28,7 +28,9 @@
  */
 
 /** */
-require_once(dirname(__FILE__) . '/../config.php');
+if(file_exists(dirname(__FILE__) . '/../config.php')) {
+  require_once(dirname(__FILE__) . '/../config.php');
+}
 
 /**
  * Interface for factory used to create subclasses of BaseRecord.
@@ -39,13 +41,9 @@ require_once(dirname(__FILE__) . '/../config.php');
  * @version $Id: base_record.php,v 1.8 2006/11/10 01:58:42 aviolette Exp $
  */
 
-class BaseRecordFactory {
-  function createInstance() {
-    die("Implement in subclass");
-  }
-  function getTable() {
-    die("Implement in subclass");
-  }
+abstract class BaseRecordFactory {
+  abstract public function createInstance();
+  abstract public function getTable(): string;
 }
 
 /**
@@ -66,73 +64,61 @@ class BaseRecord {
    * The ID of the database record.
    */
 
-  var $id;
+  public $id;
 
-  var $requiresValues;
+  public $requiresValues;
+
+  /** Table name for this record type. Set by subclass constructor. */
+  public $tableName;
 
   /**
    * Constructs a base record.
    * @param tableName the table name associated with this record.
    */
   
-  function BaseRecord($tableName = null) {
+  function __construct($tableName = null) {
     $this->id = -1;
     $this->tableName = $tableName;
   }
 
   /**
-   * Returns the URL to the database.
-   */
-
-  function getDbUrl() {
-    return "mysql://" . DBUSER . ":" . DBPASSWORD . "@" . DBHOST . "/" . DBNAME;
-  }
-
-  /**
-   * Returns a database connection.
+   * Returns a database connection (RbDb wrapping the shared PDO).
+   * Starts a transaction automatically, mirroring the old PEAR DB behaviour
+   * of autoCommit(false).
    * @access protected
-   * @return object a DB connection object
+   * @return RbDb
    */
 
-  function &getDb() {
-    $con =& DB::connect(BaseRecord::getDbUrl());
-    if(PEAR::isError($con) || !isset($con)) {
-      rb_log(__FILE__ . "," . __LINE__ . "," . $con->getMessage());
-      trigger_error("Unable to connect to the database. The connection settings " .
-          "to the database are probably improperly set up or the " . 
-          "database is down.", E_USER_ERROR);
-    }
-
-    $con->autoCommit(false);
-    return $con;
+  public static function getDb(): RbDb {
+    $db = new RbDb(rb_get_pdo());
+    $db->beginTransaction();
+    return $db;
   }
 
   /**
-   * Runs the query and returns the results.
-   * @return array the result set.
+   * Runs the query and returns an RbResult, or null on error.
+   * @return RbResult|null
    * @static
    */
 
-  function &runQuery(&$db, $query, $params = null, $file = null, $line = null) {
-    if(isset($params)) {
-      if(is_array($params)) {
+  public static function runQuery($db, $query, $params = null, $file = null, $line = null) {
+    if (isset($params)) {
+      if (is_array($params)) {
         rb_log("Running query: " . $query . ", params: " . implode(",", $params));
       } else {
         rb_log("Running query: " . $query . ", params: " . $params);
       }
-      $res =& $db->query($query, $params);
     } else {
-      rb_log("Running query: " . $query );
-      $res =& $db->query($query);
+      rb_log("Running query: " . $query);
     }
-    if(PEAR::isError($res)) {
-      $file = empty($file) ? "" : $file;
-      $line = empty($line) ? "" : $line;
-      rb_log("Error running query: " . $file . ", " . $line . ", " . $query . ", " . $res->getMessage());
-	  rb_log("Error details: " . $res->getDebugInfo());
+    try {
+      return $db->query($query, $params);
+    } catch (PDOException $e) {
+      $file = $file ?? '';
+      $line = $line ?? '';
+      rb_log("Error running query: $file, $line, $query, " . $e->getMessage());
       return null;
     }
-    return $res;
   }
   
   /**
@@ -181,9 +167,9 @@ class BaseRecord {
    * Deletes objects based on the qualifiers specified.
    */
 
-  function deleteMultipleOfClass(&$qualifiers, $tableName) {
-    $db =& BaseRecord::getDb();
-    $res =& BaseRecord::runQuery($db, "delete from $tableName " .
+  public static function deleteMultipleOfClass(&$qualifiers, $tableName) {
+    $db = BaseRecord::getDb();
+    $res = BaseRecord::runQuery($db, "delete from $tableName " .
                                  BaseRecord::buildWhereClauseDb($qualifiers),
                                  BaseRecord::prepareQualifiers($qualifiers),
                                  __FILE__, __LINE__);
@@ -201,7 +187,7 @@ class BaseRecord {
    * Constructs a 'where' clause based on the qualifiers passed in.
    */
 
-  function buildWhereClauseDb(&$qualifiers) {
+  public static function buildWhereClauseDb(&$qualifiers) {
     if(!(isset($qualifiers) && count($qualifiers))) {
       return "";
     }
@@ -223,7 +209,7 @@ class BaseRecord {
     }
     return $whereClause;
   }
-  function &prepareQualifiers(&$qualifiers) {
+  public static function prepareQualifiers(&$qualifiers) {
     if(!isset($qualifiers)) {
 	  $foo = array();
 	  return $foo;
@@ -240,10 +226,10 @@ class BaseRecord {
     return $valueList;
       
   }
-  function &loadMultipleBasic($factory, $qualifiers = null, $limit = null, $db = null, $orderByCSV = null) {
+  public static function loadMultipleBasic($factory, $qualifiers = null, $limit = null, $db = null, $orderByCSV = null) {
     $cascade = isset($db);
     if(!$cascade) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $query = "select * from " . $factory->getTable() .
       BaseRecord::buildWhereClauseDb($qualifiers);
@@ -252,9 +238,9 @@ class BaseRecord {
     }
     $paramList = BaseRecord::prepareQualifiers($qualifiers);
     if(isset($limit)) {
-      $res =& $db->limitQuery($query, 0, $limit, $paramList);
+      $res = $db->limitQuery($query, 0, $limit, $paramList);
     } else {
-      $res =& BaseRecord::runQuery($db, $query, $paramList);
+      $res = BaseRecord::runQuery($db, $query, $paramList);
     }
     $results = array();
     while($res->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -268,7 +254,7 @@ class BaseRecord {
     return $results;
   }
 
-  function createUid() {
+  public static function createUid() {
     return "" . time();
   }
 
@@ -276,7 +262,7 @@ class BaseRecord {
 	$this->requiresValues = $values;
   }
   
-  function &validate() {
+  function validate() {
 	$foo = array();
 	if(isset($this->requiresValues)) {
 	  $vars = get_object_vars($this);

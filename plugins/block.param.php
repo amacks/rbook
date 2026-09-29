@@ -29,10 +29,11 @@
  * @return string|null
  */
 
-function smarty_block_param($params, $content, &$smarty, &$repeat) {
+function smarty_block_param($params, $content, $template, &$repeat) {
+  global $rbook_param_array;
   if(is_null($content)) {
 	return null;
   }
-  $smarty->paramArray[] = $content;
+  $rbook_param_array[] = $content;
 }
 ?>

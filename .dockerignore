@@ -1,0 +1,13 @@
+# Never bake local dev config into the image — entrypoint generates it from env vars
+config.php
+
+# MySQL data directory (used by docker-compose for local testing)
+compose-mysql/
+
+# Dev/test artifacts
+.git/
+.phpunit.result.cache
+unittest/
+
+# Smarty compile cache
+skins/*/templates_c/

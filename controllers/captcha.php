@@ -20,8 +20,9 @@
  */
 
 class Captcha {
+  public $challenge;
   
-  function Captcha() {
+  function __construct() {
   }
 
   function generateText() {

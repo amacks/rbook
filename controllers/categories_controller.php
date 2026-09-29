@@ -37,8 +37,8 @@ require_once(dirname(__FILE__) . "/base_controller.php");
  */
 class CategoriesController extends BaseController {
 
-  function CategoriesController($name) {
-    $this->BaseController($name);
+  function __construct($name) {
+    parent::__construct($name);
   }
     
   /**
@@ -46,7 +46,7 @@ class CategoriesController extends BaseController {
    * @static
    */
 
-  function &newInstance() {
+  static function newInstance() {
     $controller = new CategoriesController("categories");
     $controller->set_valid_actions(array("index", "add", "delete", 
                                          "show_replacements", 
@@ -73,7 +73,7 @@ class CategoriesController extends BaseController {
     $selectedCategories = $_SESSION['selectedCategories'];
     $editCategories = Category::loadCategoriesNotIn($selectedCategories);
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("pageTitle", getMessage("PickReplacementCategory"));
     $modelView->assign("title", getMessage("PickReplacementCategory"));
     $modelView->assign("editCategories", $this->buildCategoryList($editCategories));
@@ -118,7 +118,7 @@ class CategoriesController extends BaseController {
   function index() {
     $editCategories = Category::loadMultiple();
 
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("title", getMessage("Categories"));
     $modelView->assign("pageTitle", getMessage("editCategories"));
     $modelView->assign("action", APPROOT. "categories.php");

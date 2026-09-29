@@ -39,9 +39,10 @@
  * @subpackage plugins
  */
 
-function smarty_block_form($params, $content, &$smarty, &$repeat) {
+function smarty_block_form($params, $content, $template, &$repeat) {
+  static $formOpen = '';
   if(is_null($content)) {
-	$link = "<form  action=\"". buildLink($params['controller'], $params['action'], $params['arg']) . "\"";
+	$link = "<form  action=\"". buildLink($params['controller'], $params['action'], $params['arg'] ?? null) . "\"";
 	$method = empty($params['method']) ? 'post' : $params['method'];
 	$link = $link . " method=\"" . $method . "\"";
 	$enctype = empty($params['enctype']) ? '' : (" enctype=\"" . $params['enctype'] . "\"");
@@ -49,9 +50,9 @@ function smarty_block_form($params, $content, &$smarty, &$repeat) {
 	if(isset($params['id'])) {
 	  $link = $link . " id=\"" . $params['id'] . "\"";
 	}
-	$smarty->myform = $link . ">";
+	$formOpen = $link . ">";
   } else {
-	return $smarty->myform . $content . "</form>";
+	return $formOpen . $content . "</form>";
   }
 }
 ?>

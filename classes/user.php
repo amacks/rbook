@@ -30,22 +30,22 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class User extends BaseRecord {
-  var $email;
-  var $username;
-  var $name;
-  var $admin;
-  var $auth;
-  var $readonly;
-  var $password;
-  var $disabled;
-  var $invited;
-  var $createDate;
-  var $favorite;
-  var $website;
+  public $email;
+  public $username;
+  public $name;
+  public $admin;
+  public $auth;
+  public $readonly;
+  public $password;
+  public $disabled;
+  public $invited;
+  public $createDate;
+  public $favorite;
+  public $website;
 
-  function User() {
-    $this->BaseRecord();
-    $this->password = md5('password');
+  function __construct() {
+    parent::__construct();
+    $this->password = password_hash('password', PASSWORD_DEFAULT);
     $this->disabled = 0;
     $this->admin = 0;
     $this->readonly = 0;
@@ -56,7 +56,7 @@ class User extends BaseRecord {
   /**
    * PHP4 doesn't have clone yet...this is our cheap version
    */
-  function &fakeClone() {
+  function fakeClone() {
 	$user = new User();
 	$user->email = $this->email;
 	$user->username = $this->username;
@@ -75,7 +75,7 @@ class User extends BaseRecord {
 
 
 
-  function &validate() {
+  function validate() {
 	$foo = parent::validate();
 	if(!empty($this->website) && !preg_match('/^[http|https]/', $this->website)) {
 	  $foo['user_website'] = "error.user_website.mustBeHttpOrHttps";
@@ -104,18 +104,18 @@ class User extends BaseRecord {
    */
 
   function dbCreateNew($db = null) {
-    $db =& $this->getDb();
-    $this->id = $db->nextId('users');
-    $this->runQuery($db, "insert into users (id, email,name,password,admin,disabled, " .
-                    "readonly, invited, username, createdate) values (?, ?, ?, ?, ?, ?, ?, ?, ?, now())",
-                    array($this->id, $this->email, $this->name,$this->password, 
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into users (email,name,password,admin,disabled, " .
+                    "readonly, invited, username, createdate) values (?, ?, ?, ?, ?, ?, ?, ?, now())",
+                    array($this->email, $this->name, $this->password, 
                           $this->admin, $this->disabled, $this->readonly, $this->invited, $this->username));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
   }
 
   function dbUpdate($db = null) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "update users set email = ?,name = ?, admin = ?, " .
                     "readonly = ?, auth=?, disabled = ?, invited = ?, favorite = ?, website = ? where id = ?",
                     array($this->email, $this->name, $this->admin,  
@@ -156,13 +156,10 @@ class User extends BaseRecord {
   }
 
   function delete() {
-    if(!isset($this)){
-      return;
-    }
     User::deleteMultiple(array('id' => array($this->id)));
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "users");
   }
 
@@ -170,7 +167,7 @@ class User extends BaseRecord {
    * Returns an array of users
    */
 
-  function &loadMultiple($qualifiers = null, $limit = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null) {
     $db = BaseRecord::getDb();
     
     $query = "select * from users " . 
@@ -193,7 +190,7 @@ class User extends BaseRecord {
   }
 
 
-  function &loadOne($qualifiers) {
+  public static function loadOne($qualifiers) {
     $users = User::loadMultiple($qualifiers, 1);
     if(count($users)) {
       return $users[0];
@@ -202,30 +199,46 @@ class User extends BaseRecord {
   }
 
   function validateLogin($password) {
-    return (md5($password) == $this->password || ($password == $this->password));
+    // Support legacy md5 hashes stored before the PHP8 upgrade.
+    error_log($password);
+    error_log($this->password);
+    error_log(password_verify($password, $this->password));
+    if (password_verify($password, $this->password)) {
+      return true;
+    }
+    // Backward-compat: if stored hash looks like md5 (32 hex chars), verify the old way.
+    if (strlen($this->password) === 32 && ctype_xdigit($this->password)) {
+      return md5($password) === $this->password;
+    }
+    return false;
+  }
+
+  /**
+   * Upgrades the stored password hash to bcrypt if it is still in legacy md5 format.
+   * Call this immediately after a successful login.
+   */
+  function upgradePasswordHashIfNeeded($plainPassword) {
+    if (strlen($this->password) === 32 && ctype_xdigit($this->password)) {
+      $this->updatePassword($plainPassword);
+    }
   }
 
   /**
    * Updates a password for a user.
    */
   function updatePassword($password) {
-    if(!isset($this)) {
-      die("Call to updatePassword without this pointer");
-    }
-    
-    $db =& $this->getDb();
-    $pw = $password;
-    $password = md5($password);
+    $db = $this->getDb();
+    $hashed = password_hash($password, PASSWORD_DEFAULT);
 
     $this->runQuery($db, "update users set password = ? where id = ?",
-                    array($password, $this->id));
+                    array($hashed, $this->id));
     
     $db->commit();    
     $db->disconnect();
   }
 
   function invitationsUsed() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
 		/* Invitations are used both to invite others and to recover
 		 * passwords.  Here we check that the invitee does not equal the
@@ -233,7 +246,7 @@ class User extends BaseRecord {
 		 * results. 
 		 */
 
-    $result =& $this->runQuery($db, "select count(*) from invitations where inviter = ? and invitee <> ?", 
+    $result = $this->runQuery($db, "select count(*) from invitations where inviter = ? and invitee <> ?", 
 															 array($this->id, $this->id));
     if($result->fetchInto($row, DB_FETCHMODE_ORDERED)) {
       $amount = $row[0];
@@ -245,7 +258,7 @@ class User extends BaseRecord {
   }
 
   function removeFromMyRecipes($recipe) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
   
     $this->runQuery($db, "delete from mine where recipeid = ? and userid = ?", 
                     array($recipe, $this->id));
@@ -259,15 +272,15 @@ class User extends BaseRecord {
    * Returns a list records, each with (title, url, and submittedbname)
    * that are currently in the users 'mine' list.
    */
-  function &searchForMine() {
-    $db =& $this->getDb();
+  function searchForMine() {
+    $db = $this->getDb();
 
     $query = "SELECT recipes.id as id, recipes.createdate as date,recipes.name as name, " . 
 			 "recipes.cached_rating as ra, recipes.cached_ratinghits as rahi, users.username " .
 			 "as submittedbyusername, users.name as submittedbyname " .
 			 "FROM recipes, mine, users " .
 			 "WHERE mine.userid = ? and mine.recipeid = recipes.id AND submittedby = users.id ORDER BY recipes.name";
-    $result =& $this->runQuery($db, $query, array($this->id));
+    $result = $this->runQuery($db, $query, array($this->id));
     
     $mine = array();
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -282,10 +295,10 @@ class User extends BaseRecord {
   }
   
   function countRecipes() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
     $query = "select count(id) from recipes where submittedby = ?";
-    $result =& $this->runQuery($db, $query, array($this->id));
+    $result = $this->runQuery($db, $query, array($this->id));
     if($result->fetchInto($row, DB_FETCHMODE_ORDERED)) {
       $amount = $row[0];
     } else {
@@ -298,7 +311,7 @@ class User extends BaseRecord {
   }
   
   function addToMyRecipes($recipe) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "insert into mine (recipeid, userid) values(?, ?) " . 
                     "on duplicate key update userid = ?", 
                     array($recipe, $this->id, $this->id));

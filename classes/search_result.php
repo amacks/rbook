@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * rbook Recipe Management System
  * Copyright (C) 2005 Andrew Violette andrew@andrewviolette.net
@@ -28,22 +28,22 @@
  */
 class SearchResult {
   
-  var $title;
-  var $url;
-  var $recipeId;
-  var $category;
-  var $submittedByName;
-  var $submittedWhen;
-  var $userId;
-  var $image;
-  var $description;
-  var $rating;
-  var $votes;
-  var $cachedRating;
-  var $cachedRatingHits;
-  var $username;
+  public $title;
+  public $url;
+  public $recipeId;
+  public $category;
+  public $submittedByName;
+  public $submittedWhen;
+  public $userId;
+  public $image;
+  public $description;
+  public $rating;
+  public $votes;
+  public $cachedRating;
+  public $cachedRatingHits;
+  public $username;
 
-  function SearchResult($title, $url, $recipeId, $submittedBy, $username, $submittedWhen, 
+  function __construct($title, $url, $recipeId, $submittedBy, $username, $submittedWhen, 
 						$category, $userId, $description, $cachedRating, $cachedRatingHits) {
     $this->title = $title;
     $this->url = $url;

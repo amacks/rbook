@@ -21,22 +21,22 @@
 
 require_once(dirname(__FILE__) . '/base_record.php');
 class GroceryListFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new GroceryList();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "groceryitems";
   }
 }
 
 class GroceryList extends BaseRecord {
-  var $description;
-  var $orderid;
-  var $userid;
+  public $description;
+  public $orderid;
+  public $userid;
 
-  function GroceryList() {
-    $this->BaseRecord();
+  function __construct() {
+    parent::__construct();
     $this->orderid = 0;
   }
 
@@ -52,17 +52,17 @@ class GroceryList extends BaseRecord {
    */
 
   function dbCreateNew($db = null) {
-    $db =& $this->getDb();
-    $this->id = $db->nextId('users');
-    $this->runQuery($db, "insert into groceryitems (id,userid,description,orderid) " .
-                    " values (?, ?, ?, ?)",
-                    array($this->id, $this->userid, $this->description, $this->orderid));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into groceryitems (userid,description,orderid) " .
+                    " values (?, ?, ?)",
+                    array($this->userid, $this->description, $this->orderid));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
   }
 
   function dbUpdate($db = null) {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "update groceryitems set " .
                     "userid = ?, description=?, orderid= ? where id = ?",
                     array($this->userid, $this->description, $this->orderid, $this->id));
@@ -71,17 +71,14 @@ class GroceryList extends BaseRecord {
   }
 
   function delete() {
-    if(!isset($this)){
-      return;
-    }
     GroceryList::deleteMultiple(array('id' => array($this->id)));
   }
 
-  function deleteMultiple($qualifiers = null) {
+  public static function deleteMultiple($qualifiers = null) {
     return BaseRecord::deleteMultipleOfClass($qualifiers, "groceryitems");
   }
 
-  function findByUser($id) {
+  public static function findByUser($id) {
 	return GroceryList::loadMultiple(array('userid' => $id));
   }
 
@@ -89,12 +86,12 @@ class GroceryList extends BaseRecord {
    * Returns an array of users
    */
 
-  function &loadMultiple($qualifiers = null, $limit = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null) {
     return BaseRecord::loadMultipleBasic(new GroceryListFactory(), $qualifiers, null, null);
   }
 
 
-  function &loadOne($qualifiers) {
+  function loadOne($qualifiers) {
     $users = User::loadMultiple($qualifiers, 1);
     if(count($users)) {
       return $users[0];

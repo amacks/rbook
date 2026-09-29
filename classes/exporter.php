@@ -29,15 +29,15 @@
  */
 
 class Exporter extends BaseRecord {
-  var $con;
-  var $fh;
-  var $db;
-  var $numRecipes;
-  var $numCategories;
-  var $numUsers;
+  public $con;
+  public $fh;
+  public $db;
+  public $numRecipes;
+  public $numCategories;
+  public $numUsers;
 
   function setUp() {
-    $this->db =& $this->getDb();
+    $this->db = $this->getDb();
     $this->numRecipes=0;
     $this->numUsers=0;
     $this->numCategories=0;
@@ -76,8 +76,7 @@ class Exporter extends BaseRecord {
   }
 
   function disconnect() {
-    $db =& $this->db;
-    $db->disconnect();
+    $this->db->disconnect();
   }
   
   function exportFile($file) {
@@ -90,7 +89,7 @@ class Exporter extends BaseRecord {
   
   function exportMine() {
     $this->write("<myrecipes>\n");
-    $results =& $this->runQuery($this->db, "select userid, recipeid from mine");
+    $results = $this->runQuery($this->db, "select userid, recipeid from mine");
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $this->write("  <mine userid=\"" . $row['userid'] . "\" recipeid=\"" . $row['recipeid'] . "\"/>\n");
     }
@@ -99,7 +98,7 @@ class Exporter extends BaseRecord {
   
   function exportInvitations() {
     $this->write("<invitations>\n");
-    $results =& $this->runQuery($this->db, "select invitee, inviter, code, acceptdate from invitations");
+    $results = $this->runQuery($this->db, "select invitee, inviter, code, acceptdate from invitations");
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $this->write("  <invitation invitee=\"" . $row['invitee'] . "\" inviter=\""
                    . $row['inviter'] . "\" code=\"" . $row['code'] . 
@@ -111,7 +110,7 @@ class Exporter extends BaseRecord {
   function exportUsers() {
     $this->write("<users>\n");
 
-    $results =& $this->runQuery($this->db, "select id,invited,email,name,username,password,admin,readonly from users");
+    $results = $this->runQuery($this->db, "select id,invited,email,name,username,password,admin,readonly from users");
     
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $this->numUsers++;
@@ -127,7 +126,7 @@ class Exporter extends BaseRecord {
 
   function exportComments() {
 	$this->write("<comments>\n");
-	$results =& $this->runQuery($this->db, "select * from comments");
+	$results = $this->runQuery($this->db, "select * from comments");
 	while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
 	  $this->write("  <comment id='" . $row['id'] . "' recipeid='" . 
 				   $row['recipeid'] . "' userid='" . $row['userid'] . "' rating='" . $row['rating'] . "' postdate='" . $row['createdate'] . "'>");
@@ -141,7 +140,7 @@ class Exporter extends BaseRecord {
   
   function exportGuestbook() {
 	$this->write("<guestbook>\n");
-	$results =& $this->runQuery($this->db, "select * from guestbook");
+	$results = $this->runQuery($this->db, "select * from guestbook");
 	while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
 	  $this->write("  <guestbookentry id='" . $row['id'] . "' name='" . 
 				   $row['name'] . "' postdate='" . $row['postdate'] . "'>");
@@ -155,7 +154,7 @@ class Exporter extends BaseRecord {
 
   function exportImages() {
   $this->write("<images>\n");
-    $results =& $this->runQuery($this->db, "select * from images");
+    $results = $this->runQuery($this->db, "select * from images");
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
         $this->write("  <image id='" . $row['id'] . "' recipeid='" .
                     $row['recipeid'] . "' caption='" . $row['caption'] .
@@ -176,7 +175,7 @@ class Exporter extends BaseRecord {
   }
   function exportCategories() {
 
-    $results =& $this->runQuery($this->db, "select id,name from categories");
+    $results = $this->runQuery($this->db, "select id,name from categories");
     $this->write("<categories>\n");
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $this->numCategories++;
@@ -187,7 +186,7 @@ class Exporter extends BaseRecord {
 
   function exportRecipe($id) {
     $this->numRecipes++;
-    $results =& $this->runQuery($this->db, "select * from recipes where id = $id");
+    $results = $this->runQuery($this->db, "select * from recipes where id = $id");
     $results->fetchInto($row, DB_FETCHMODE_ASSOC);
     if(!$row) {
       return;
@@ -213,7 +212,7 @@ class Exporter extends BaseRecord {
 
   function exportRecipeCategoriesFor($id) {
     $this->write("    <rcs>\n");
-    $results =& $this->runQuery($this->db,
+    $results = $this->runQuery($this->db,
                 "select categoryid from recipetocategory where recipeid = $id");
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $this->write("      <rc id=\"" . $row['categoryid'] . "\"/>\n");
@@ -245,7 +244,7 @@ class Exporter extends BaseRecord {
   }
 
   function exportIngredientSetsFor($id) {
-    $results =& $this->runQuery($this->db,
+    $results = $this->runQuery($this->db,
                                "select * from ingredientsets where recipeid = $id order by orderid");
     $sets = array();
     while($results->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -273,7 +272,7 @@ class Exporter extends BaseRecord {
   }
 
   function retrieveRecipeIds() {
-    $result =& $this->runQuery($this->db, "select id from recipes");
+    $result = $this->runQuery($this->db, "select id from recipes");
     
     $rset = array();
     
