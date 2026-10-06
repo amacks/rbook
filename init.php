@@ -19,7 +19,7 @@
  */
 
 /* the version of rbook  */
-define("RBOOK_VERSION", "2.4");
+define("RBOOK_VERSION", "3.0");
 require_once(dirname(__FILE__) . '/vendor/autoload.php');
 require_once(dirname(__FILE__) . '/helpers/db.php');
 require_once(dirname(__FILE__) . '/helpers/resources.php');
