@@ -26,6 +26,9 @@ RUN a2enmod rewrite
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# set php.ini
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 # ---------------------------------------------------------------------------
 # Copy application source
 # ---------------------------------------------------------------------------
