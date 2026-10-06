@@ -250,6 +250,7 @@ class BaseController {
 	$smarty->setCompileCheck(true);
 	$smarty->assign("appTitle", APPTITLE);
 	$smarty->debugging = false;
+    $smarty->escape_html = true; ##Added per AWS Pen test
 	$smarty->setConfigDir(SKINDIR . '/configs');
 	$smarty->setTemplateDir(getTemplateDir());
 	$smarty->setCompileDir(SKINDIR . '/templates_c');
