@@ -217,6 +217,13 @@ class BaseController {
 
   function before_execute($method) {
 	if($this->requiresSession) {
+	  session_set_cookie_params(
+	    0,
+	    ini_get('session.cookie_path'),
+	    ini_get('session.cookie_domain'),
+	    ini_get('session.cookie_secure'),
+	    true
+	  );
 	  session_start();
 	}
 	$this->currentAction = $method;

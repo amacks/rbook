@@ -362,8 +362,8 @@ class UserController extends BaseController {
       $_SESSION['user'] = $theUser;
       if(($_POST['saveid'] ?? '') == 'on') {
         $token = bin2hex(random_bytes(16));
-        setcookie('saveid', $theUser->id, time() + 2592000, APPROOT);
-        setcookie('auth',$token, time() + 2592000, APPROOT);
+        setcookie('saveid', $theUser->id, time() + 2592000, APPROOT, '', false, true);
+        setcookie('auth', $token, time() + 2592000, APPROOT, '', false, true);
         $theUser->auth = $token;
         $theUser->save();
       } 
