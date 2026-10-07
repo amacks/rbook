@@ -35,14 +35,13 @@ class InstallController extends BaseController {
    * Factory method that creates a user controller.  
    */
 
-  function &newInstance() {
+  static function newInstance() {
 	$controller = new InstallController();
 	$controller->set_valid_actions(array("index"));
 	return $controller;
   }
 
   function index() {
-	$this->before_execute("index");
 	$_SESSION['mobile'] = true;
 	// pop out of controller mode since the install app was never converted
 	header("Location: index.php");

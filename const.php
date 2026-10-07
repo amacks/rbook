@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-define("USER_PASSWORD_FIELD_LENGTH", "30");
+define("USER_PASSWORD_FIELD_LENGTH", "64");
 
 define("RECIPE_NAME_FIELD_LENGTH", "100");
 

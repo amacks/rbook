@@ -32,29 +32,30 @@
 require_once(dirname(__FILE__) . '/base_record.php');
 
 class ImageFactory extends BaseRecordFactory {
-  function createInstance() {
+  function createInstance(): mixed {
     return new Image();
   }
 
-  function getTable() {
+  function getTable(): string {
     return "images";
   }
 }
 
 class Image extends BaseRecord {
-  var $recipeid;
-  var $caption;
-  var $width;
-  var $height;
-  var $submittedBy;
-  var $createDate;
-  var $type;
-  var $recipeuid;
-  var $uid;
-  var $id;
+  public $recipeid;
+  public $caption;
+  public $width;
+  public $height;
+  public $submittedBy;
+  public $createDate;
+  public $type;
+  public $recipeuid;
+  public $uid;
+  public $id;
+  public $submittedByName;
 
-  function Image() {
-    $this->BaseRecord("images");
+  function __construct() {
+    parent::__construct("images");
     $this->uid = $this->createUid();
   }
         
@@ -82,15 +83,15 @@ class Image extends BaseRecord {
     }
   }
 
-  function &findForRecipe($recipeid, $limit = null, $db = null) {
+  public static function findForRecipe($recipeid, $limit = null, $db = null) {
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $query = "select uid,images.id,recipeuid,recipeid,caption,width,height,submittedBy,images.createDate,type,users.name from images,users where recipeid = ? and users.id = images.submittedBy";
     if(isset($limit)) {
-      $result =& $db->limitQuery($query, 0, 5, array($recipeid));
+      $result = $db->limitQuery($query, 0, 5, array($recipeid));
     } else {
-      $result =& BaseRecord::runQuery($db, $query , array($recipeid));
+      $result = BaseRecord::runQuery($db, $query, array($recipeid));
     }
     $rows = array();
     while($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
@@ -165,12 +166,11 @@ class Image extends BaseRecord {
   }
 
   function dbCreateNew() {
-    $db =& $this->getDb();
-    $id = $db->nextId("images");
-    $this->runQuery($db, "insert into images (id, uid, recipeuid,recipeid, caption, width, height, submittedBy, type) values (?, ?, ?, ?, ?, ?, ?, ?, ?)", array($id, $this->uid, $this->recipeuid, $this->recipeid, $this->caption, $this->width, $this->height, $this->submittedBy, $this->type));
+    $db = $this->getDb();
+    $this->runQuery($db, "insert into images (uid, recipeuid,recipeid, caption, width, height, submittedBy, type) values (?, ?, ?, ?, ?, ?, ?, ?)", array($this->uid, $this->recipeuid, $this->recipeid, $this->caption, $this->width, $this->height, $this->submittedBy, $this->type));
+    $this->id = $db->lastInsertId();
     $db->commit();
     $db->disconnect();
-    $this->id = $id;
   }
   
   function remove($db = null) {
@@ -178,7 +178,7 @@ class Image extends BaseRecord {
     unlink($this->getThumbPath());
     $cascade = isset($db);
     if(!isset($db)) {
-      $db =& BaseRecord::getDb();
+      $db = BaseRecord::getDb();
     }
     $this->runQuery($db, "delete from images where id = ?", array($this->id));
     if(!$cascade) {
@@ -187,12 +187,12 @@ class Image extends BaseRecord {
     }
 	}
   
-  function &load($id, $db = null) {
+  public static function load($id, $db = null) {
     $cascade = isset($db);
 	if (!isset($db)) {
-	    $db =& BaseRecord::getDb();
+	    $db = BaseRecord::getDb();
 	}
-    $result =& BaseRecord::runQuery($db, "select images.id id, recipeid, recipeuid, caption, width, height, submittedBy, images.createDate createDate, name, type, uid from images,users where images.id = ? and users.id = images.submittedby", array($id));
+    $result = BaseRecord::runQuery($db, "select images.id id, recipeid, recipeuid, caption, width, height, submittedBy, images.createDate createDate, name, type, uid from images,users where images.id = ? and users.id = images.submittedby", array($id));
     $img = null;
     if($result->fetchInto($row, DB_FETCHMODE_ASSOC)) {
       $img = new Image();
@@ -204,7 +204,7 @@ class Image extends BaseRecord {
     return $img;
   }
 
-  function &loadMultiple($qualifiers = null, $limit = null, $db = null) {
+  public static function loadMultiple($qualifiers = null, $limit = null, $db = null) {
     return BaseRecord::loadMultipleBasic(new ImageFactory(), $qualifiers, $limit, $db);
   }
 

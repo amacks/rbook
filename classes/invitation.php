@@ -34,14 +34,14 @@ require_once(dirname(__FILE__) . '/base_record.php');
 require_once(dirname(__FILE__) . "/category.php");
 
 class Invitation extends BaseRecord {
-  var $inviter;
-  var $invitee;
-  var $code;
-  var $acceptedDate;
-  var $createDate;
+  public $inviter;
+  public $invitee;
+  public $code;
+  public $acceptedDate;
+  public $createDate;
 
-  function Invitation($invited, $inviter) {
-    $this->BaseRecord();
+  function __construct($invited, $inviter) {
+    parent::__construct();
     $this->invitee = $invited;
     $this->inviter = $inviter;
     $this->code = md5(time());
@@ -49,7 +49,7 @@ class Invitation extends BaseRecord {
     $this->acceptedDate = null;
   }
 
-  function save() {
+  function save($db = null) {
     if(isset($this->createDate)) {
       $this->dbUpdate();
     } else {
@@ -58,7 +58,7 @@ class Invitation extends BaseRecord {
   }
 
   function delete() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "delete from invitations where invitee = ? and inviter = ?", 
                     array($this->invitee, $this->inviter));
     $db->commit();
@@ -74,7 +74,7 @@ class Invitation extends BaseRecord {
   }
 
   function dbUpdate() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
     $this->runQuery($db, "update invitations set " .
                     "code = ?, modifieddate = now(), acceptdate = ?",
                     array($this->code, 
@@ -83,10 +83,10 @@ class Invitation extends BaseRecord {
     $db->disconnect();
   }
 
-  function load($code) {
-    $db =& BaseRecord::getDb();
+  public static function load($code) {
+    $db = BaseRecord::getDb();
 
-    $results =& BaseRecord::runQuery($db, "select invitee, inviter, code, createdate, modifieddate, " .
+    $results = BaseRecord::runQuery($db, "select invitee, inviter, code, createdate, modifieddate, " .
                                 "acceptdate, createdate  from invitations where code = ?",
                                 array($code));
     $invite = null;
@@ -99,7 +99,7 @@ class Invitation extends BaseRecord {
   }
 
   function dbCreateNew() {
-    $db =& $this->getDb();
+    $db = $this->getDb();
 
     $this->runQuery($db, "insert into invitations (invitee, inviter, code, " .
                     "modifieddate, acceptdate, createdate) values (?, ?, ?, now(), NULL, NULL)",

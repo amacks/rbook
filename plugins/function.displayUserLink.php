@@ -29,7 +29,7 @@
  * @return string|null
  */
 
-function smarty_function_displayUserLink($params, &$smarty) {
+function smarty_function_displayUserLink($params, $template) {
   $userid = $params['userid'];
   $theUser = User::loadOne(array('id' => $userid));
   return "<a href='" . buildLink('user', 'view_profile', $theUser->name) . "'>" . $theUser->name . "</a>";

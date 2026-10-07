@@ -29,7 +29,7 @@
  * @return string|null
  */
 
-function smarty_function_getMessage($params, &$smarty) {
+function smarty_function_getMessage($params, $template) {
 	return getMessage($params['key']);
 }
 ?>

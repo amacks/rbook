@@ -34,6 +34,8 @@
  * @version $Id: resources.php,v 1.6 2007/02/28 15:50:28 maschine Exp $
  */
 
+global $i18n_messages, $i18n_messages_en, $i18n_messages_de, $i18n_messages_et;
+
 include(dirname(__FILE__) . "/resources_de.php");
 include(dirname(__FILE__) . "/resources_et.php");
 include(dirname(__FILE__) . "/resources_en.php");

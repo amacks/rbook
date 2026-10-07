@@ -35,7 +35,7 @@ class HelpController extends BaseController {
    * Factory method that creates a help page controller.  
    * @static
    */
-  function &newInstance() {
+  static function newInstance() {
 	$controller = new HelpController();
   	$valid = array("index", "create_plugin");
     $auth = array("create_plugin");
@@ -54,7 +54,7 @@ class HelpController extends BaseController {
 	$pluginIcon = "http://" . $_SERVER['SERVER_NAME'] . APPROOT . "skins/" . SKIN . "/images/favicon.ico";
 	$pluginName = APPTITLE;
 	
-    $modelView =& $this->prepareModelAndView();
+    $modelView = $this->prepareModelAndView();
     $modelView->assign("selectedTab", "help");
     $modelView->assign("title", getMessage("help"));
 	$modelView->assign("purl", $pluginURL);
