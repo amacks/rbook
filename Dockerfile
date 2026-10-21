@@ -2,7 +2,7 @@
 # rbook — PHP recipe management app
 # Base: php:8.2-apache (Apache 2.4 + PHP 8.2 as mod_php)
 # ---------------------------------------------------------------------------
-FROM php:8.2-apache
+FROM php:8.2.35-apache
 
 # Install system packages needed by PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
