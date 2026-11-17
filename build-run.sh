@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=23
+VERSION=24
 
 docker build -t rbook-php8-${VERSION} .
 
