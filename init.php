@@ -55,7 +55,7 @@ require_once(dirname(__FILE__) . '/classes/user.php');
 require_once(dirname(__FILE__) . '/classes/category.php');
 require_once(dirname(__FILE__) . '/classes/image.php');
 require_once(dirname(__FILE__) . '/classes/recipe.php');
-require_once(dirname(__FILE__) . '/classes/guestbook.php');
+/*require_once(dirname(__FILE__) . '/classes/guestbook.php');*/
 require_once(dirname(__FILE__) . '/classes/ingredient.php');
 require_once(dirname(__FILE__) . '/classes/ingredientset.php');
 require_once(dirname(__FILE__) . '/classes/search_result.php');
