@@ -29,6 +29,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # set php.ini
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+# set my proper security.conf
+RUN mv /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/
+COPY docker/security.conf /etc/apache2/conf-enabled/
+
 # ---------------------------------------------------------------------------
 # Copy application source
 # ---------------------------------------------------------------------------
