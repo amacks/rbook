@@ -5,5 +5,4 @@
 {if ($loggedin && not $readonly) or $is_mobile}
 <li>{link controller=grocery action=index}{getMessage key=groceryList}{/link}</li>
 {/if}
-<li>{link controller=guestbook action=index}{getMessage key=guestbook}{/link}</li>
 <li>{link controller=help action=index}{getMessage key=help}{/link}</li>
